@@ -12,9 +12,9 @@ pub fn HRam.new() HRam {
 }
 
 pub fn (h HRam) read(addr u16) u8 {
-	return h.ram[addr]
+	return h.ram[addr & (size - 1)]
 }
 
 pub fn (mut h HRam) write(addr u16, val u8) {
-	h.ram[addr] = val
+	h.ram[addr & (size - 1)] = val
 }
