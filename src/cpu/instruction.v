@@ -302,3 +302,36 @@ fn (mut c Cpu) jr_c(bus &Peripherals, cond Cond) {
 		}
 	}
 }
+
+fn (mut c Cpu) call(mut bus Peripherals) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read16(bus, Imm16{}) or { return }
+				c.in_go(1)
+			}
+			1...4 {
+				c.push16(mut bus, c.regs.pc) or { return }
+				c.regs.pc = u16(c.ctx.in_ireg)
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) ret(bus &Peripherals) {
+	match c.ctx.in_step {
+		0..2 {
+			val := c.pop16(bus) or { return }
+			c.regs.pc = val
+			c.in_go(3)
+		}
+		3 {
+			c.in_go(0)
+			c.fetch(bus)
+		}
+	}
+}
