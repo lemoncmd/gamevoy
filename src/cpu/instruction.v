@@ -159,12 +159,12 @@ fn (mut c Cpu) rl[S](mut bus Peripherals, src S) {
 				c.regs.set_flag(.z, result == 0)
 				c.regs.set_flag(.n, false)
 				c.regs.set_flag(.h, false)
-				c.regs.set_flag(.c, v & 0x80 > 0)
+				c.regs.set_flag(.c, val & 0x80 > 0)
 				c.ctx.in_ireg = result
 				c.in_go(1)
 			}
 			1 {
-				c.write8(mut bus, src, c.ctx.in_ireg) or { return }
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
 				c.in_go(0)
 				c.fetch(bus)
 				return
@@ -324,7 +324,7 @@ fn (mut c Cpu) call(mut bus Peripherals) {
 
 fn (mut c Cpu) ret(bus &Peripherals) {
 	match c.ctx.in_step {
-		0..2 {
+		0...2 {
 			val := c.pop16(bus) or { return }
 			c.regs.pc = val
 			c.in_go(3)
@@ -333,5 +333,6 @@ fn (mut c Cpu) ret(bus &Peripherals) {
 			c.in_go(0)
 			c.fetch(bus)
 		}
+		else {}
 	}
 }
