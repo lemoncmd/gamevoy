@@ -4,16 +4,22 @@ import peripherals { Peripherals }
 
 struct Ctx {
 mut:
-	opcode u8
-	cb     bool
+	opcode  u8
+	cb      bool
 	rw_step int
 	in_step int
+	rw_ireg int
+	in_ireg int
 }
 
-struct Cpu {
+pub struct Cpu {
 mut:
 	regs Registers
 	ctx  Ctx
+}
+
+pub fn Cpu.new() Cpu {
+	return Cpu{}
 }
 
 pub fn (mut c Cpu) emulate_cycle(mut bus Peripherals) {
