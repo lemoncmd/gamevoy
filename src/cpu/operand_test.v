@@ -9,10 +9,10 @@ fn test_operand_read8() {
 	mut c := Cpu.new()
 	f := false
 	if f {
-		c.read8(&pp, Reg8.a)
-		c.read8(&pp, Imm8{})
-		c.read8(&pp, Indirect.bc)
-		c.read8(&pp, Direct8.d)
+		c.read8(pp, Reg8.a)
+		c.read8(pp, Imm8{})
+		c.read8(pp, Indirect.bc)
+		c.read8(pp, Direct8.d)
 	}
 }
 
@@ -34,9 +34,9 @@ fn test_operand_read16() {
 	mut c := Cpu.new()
 	f := false
 	if f {
-		c.read16(&pp, Reg16.af)
-		c.read16(&pp, Imm16{})
-		c.read16(&pp, Direct16{})
+		c.read16(pp, Reg16.af)
+		c.read16(pp, Imm16{})
+		c.read16(pp, Direct16{})
 	}
 }
 
