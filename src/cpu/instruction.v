@@ -129,3 +129,33 @@ fn (mut c Cpu) dec16[S](mut bus Peripherals, src S) {
 		else {}
 	}
 }
+
+fn (mut c Cpu) rl[S](mut bus Peripherals, src S) {
+	match c.ctx.in_step {
+		0 {
+			val := c.read8(bus, src) or { return }
+			result := (val << 1) | u8(c.regs.get_flag(.cf))
+			c.regs.set_flag(.zf, result == 0)
+			c.regs.set_flag(.nf, false)
+			c.regs.set_flag(.hf, false)
+			c.regs.set_flag(.cf, v & 0x80 > 0)
+			c.ctx.in_ireg = result
+			c.in_go(1)
+		}
+		1 {
+			c.write8(mut bus, src, c.ctx.in_ireg) or { return }
+			c.in_go(0)
+			c.fetch(bus)
+		}
+		else {}
+	}
+}
+
+fn (mut c Cpu) bit[S](bus &Peripherals, bit u8, src S) {
+	mut v := c.read8(bus, src) or { return }
+	v &= 1 << bit
+	c.regs.set_flag(.zf, v == 0)
+	c.regs.set_flag(.nf, false)
+	c.regs.set_flag(.hf, true)
+	c.fetch(bus)
+}
