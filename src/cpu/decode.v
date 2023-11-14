@@ -19,8 +19,64 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x12 { c.ld(mut bus, Indirect.de, Reg8.a) }
 		0x22 { c.ld(mut bus, Indirect.hli, Reg8.a) }
 		0x32 { c.ld(mut bus, Indirect.hld, Reg8.a) }
+		// inc
+		0x03 { c.inc16(mut bus, Reg16.bc) }
+		0x13 { c.inc16(mut bus, Reg16.de) }
+		0x23 { c.inc16(mut bus, Reg16.hl) }
+		0x33 { c.inc16(mut bus, Reg16.sp) }
+		0x04 { c.inc(mut bus, Reg8.b) }
+		0x0C { c.inc(mut bus, Reg8.c) }
+		0x14 { c.inc(mut bus, Reg8.d) }
+		0x1C { c.inc(mut bus, Reg8.e) }
+		0x24 { c.inc(mut bus, Reg8.h) }
+		0x2C { c.inc(mut bus, Reg8.l) }
+		0x34 { c.inc(mut bus, Indirect.hl) }
+		0x3C { c.inc(mut bus, Reg8.a) }
+		// dec
+		0x0B { c.dec16(mut bus, Reg16.bc) }
+		0x1B { c.dec16(mut bus, Reg16.de) }
+		0x2B { c.dec16(mut bus, Reg16.hl) }
+		0x3B { c.dec16(mut bus, Reg16.sp) }
+		0x05 { c.dec(mut bus, Reg8.b) }
+		0x0D { c.dec(mut bus, Reg8.c) }
+		0x15 { c.dec(mut bus, Reg8.d) }
+		0x1D { c.dec(mut bus, Reg8.e) }
+		0x25 { c.dec(mut bus, Reg8.h) }
+		0x2D { c.dec(mut bus, Reg8.l) }
+		0x35 { c.dec(mut bus, Indirect.hl) }
+		0x3D { c.dec(mut bus, Reg8.a) }
+		// jr
+		0x18 { c.jr(bus) }
+		0x20 { c.jr_c(bus, .nz) }
+		0x28 { c.jr_c(bus, .z) }
+		0x30 { c.jr_c(bus, .nc) }
+		0x38 { c.jr_c(bus, .c) }
+		// cp
+		0xB8 { c.cp(bus, Reg8.b) }
+		0xB9 { c.cp(bus, Reg8.c) }
+		0xBA { c.cp(bus, Reg8.d) }
+		0xBB { c.cp(bus, Reg8.e) }
+		0xBC { c.cp(bus, Reg8.h) }
+		0xBD { c.cp(bus, Reg8.l) }
+		0xBE { c.cp(bus, Indirect.hl) }
+		0xBF { c.cp(bus, Reg8.a) }
+		0xFE { c.cp(bus, Imm8{}) }
+		// pop
+		0xC1 { c.pop(mut bus, Reg16.bc) }
+		0xD1 { c.pop(mut bus, Reg16.de) }
+		0xE1 { c.pop(mut bus, Reg16.hl) }
+		0xF1 { c.pop(mut bus, Reg16.af) }
+		// push
+		0xC5 { c.push(mut bus, Reg16.bc) }
+		0xD5 { c.push(mut bus, Reg16.de) }
+		0xE5 { c.push(mut bus, Reg16.hl) }
+		0xF5 { c.push(mut bus, Reg16.af) }
+		// ret
+		0xC9 { c.ret(bus) }
 		// cb prefix
 		0xCB { c.cb_prefixed(mut bus) }
+		// call
+		0xCD { c.call(mut bus) }
 		else { panic('Not implemented: ${c.ctx.opcode:02x}') }
 	}
 }
