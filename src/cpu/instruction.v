@@ -202,7 +202,9 @@ fn (mut c Cpu) push16(mut bus Peripherals, val u16) ? {
 		4 {
 			return
 		}
-		else { return none }
+		else {
+			return none
+		}
 	}
 }
 
@@ -241,12 +243,14 @@ fn (mut c Cpu) pop16(bus &Peripherals) ?u16 {
 		2 {
 			return u16(c.ctx.in_ireg)
 		}
-		else { return none }
+		else {
+			return none
+		}
 	}
 }
 
-fn (mut c Cpu) pop(mut Peripherals, dst Reg16) {
-	val := c.pop(bus) or { return }
+fn (mut c Cpu) pop(mut bus Peripherals, dst Reg16) {
+	val := c.pop16(bus) or { return }
 	c.write16(mut bus, dst, val) or { return }
 	c.in_go(0)
 	c.fetch(bus)
