@@ -282,13 +282,13 @@ fn (c Cpu) cond(cond Cond) bool {
 	}
 }
 
-fn (mut c Cpu) jr_c(bus &Peripherals, c Cond) {
+fn (mut c Cpu) jr_c(bus &Peripherals, cond Cond) {
 	for {
 		match c.ctx.in_step {
 			0 {
 				val := c.read8(bus, Imm8{}) or { return }
 				c.in_go(1)
-				if c.cond(c) {
+				if c.cond(cond) {
 					c.regs.pc += u16(i8(val))
 					return
 				}
@@ -298,6 +298,7 @@ fn (mut c Cpu) jr_c(bus &Peripherals, c Cond) {
 				c.fetch(bus)
 				return
 			}
+			else {}
 		}
 	}
 }
