@@ -180,3 +180,74 @@ fn (mut c Cpu) bit[S](bus &Peripherals, bit u8, src S) {
 	c.regs.set_flag(.hf, true)
 	c.fetch(bus)
 }
+
+fn (mut c Cpu) push16(mut bus Peripherals, val u16) ? {
+	match c.ctx.in_step {
+		1 {
+			c.in_go(2)
+			return none
+		}
+		2 {
+			c.regs.sp--
+			bus.write(c.regs.sp, u8(val >> 8))
+			c.in_go(3)
+			return none
+		}
+		3 {
+			c.regs.sp--
+			bus.write(c.regs.sp, u8(val))
+			c.in_go(4)
+			return none
+		}
+		4 {
+			return
+		}
+		else { return none }
+	}
+}
+
+fn (mut c Cpu) push(mut bus Peripherals, src Reg16) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read16(bus, src) or { return }
+				c.in_go(1)
+			}
+			1...4 {
+				c.push16(mut bus, u16(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) pop16(bus &Peripherals) ?u16 {
+	match c.ctx.in_step {
+		0 {
+			c.ctx.in_ireg = bus.read(c.regs.sp)
+			c.regs.sp++
+			c.in_go(1)
+			return none
+		}
+		1 {
+			c.ctx.in_ireg |= u16(bus.read(c.regs.sp)) << 8
+			c.regs.sp++
+			c.in_go(2)
+			return none
+		}
+		2 {
+			return u16(c.ctx.in_ireg)
+		}
+		else { return none }
+	}
+}
+
+fn (mut c Cpu) pop(mut Peripherals, dst Reg16) {
+	val := c.pop(bus) or { return }
+	c.write16(mut bus, dst, val) or { return }
+	c.in_go(0)
+	c.fetch(bus)
+}
