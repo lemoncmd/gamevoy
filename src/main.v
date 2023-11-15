@@ -1,8 +1,10 @@
 module main
 
-import cpu
+import peripherals.bootrom
+import gameboy
 
 fn main() {
-	c := cpu.Cpu.new()
-	println(c)
+	b := bootrom.BootRom.new([0x100]u8{})
+	mut g := gameboy.Gameboy.new(b)
+	g.run()
 }

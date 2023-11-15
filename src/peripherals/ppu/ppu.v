@@ -11,7 +11,7 @@ enum Mode {
 	drawing
 }
 
-[flag]
+@[flag]
 enum Lcdc as u8 {
 	bg_window_enable
 	sprite_enable
@@ -23,7 +23,7 @@ enum Lcdc as u8 {
 	ppu_enable
 }
 
-[flag]
+@[flag]
 enum Stat {
 	mode_l
 	mode_h
