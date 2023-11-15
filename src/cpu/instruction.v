@@ -56,6 +56,7 @@ fn (mut c Cpu) cp[S](bus &Peripherals, src S) {
 	c.regs.set_flag(.n, true)
 	c.regs.set_flag(.h, (c.regs.a & 0xF) < (val & 0xF))
 	c.regs.set_flag(.c, carry == 1)
+	c.fetch(bus)
 }
 
 fn (mut c Cpu) inc[S](mut bus Peripherals, src S) {

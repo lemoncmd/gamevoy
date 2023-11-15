@@ -82,7 +82,7 @@ mut:
 	cycles u8 = 1
 	vram   [0x2000]u8
 	oam    [0xA0]u8
-	buffer [lcd_width * lcd_height]u8
+	buffer [23040]u8
 }
 
 pub fn Ppu.new() Ppu {
@@ -300,4 +300,8 @@ pub fn (mut p Ppu) emulate_cycle() bool {
 		}
 	}
 	return ret
+}
+
+pub fn (p &Ppu) pixel_buffer() []u8 {
+	return []u8{len: ppu.lcd_width * ppu.lcd_height, init: p.buffer[index]}
 }

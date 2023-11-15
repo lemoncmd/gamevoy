@@ -10,7 +10,8 @@ mut:
 	bootrom bootrom.BootRom
 	wram    wram.WRam
 	hram    hram.HRam
-	ppu     ppu.Ppu
+pub mut:
+	ppu ppu.Ppu
 }
 
 pub fn Peripherals.new(br BootRom) Peripherals {

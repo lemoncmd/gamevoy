@@ -22,6 +22,10 @@ pub fn Cpu.new() Cpu {
 	return Cpu{}
 }
 
+pub fn (mut c Cpu) init(bus &Peripherals) {
+	c.fetch(bus)
+}
+
 pub fn (mut c Cpu) emulate_cycle(mut bus Peripherals) {
 	c.decode(mut bus)
 }

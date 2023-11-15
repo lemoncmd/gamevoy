@@ -39,26 +39,26 @@ fn (r &Registers) read_hl() u16 {
 
 fn (mut r Registers) write_af(val u16) {
 	r.a = u8(val >> 8)
-	r.f = u8(val & 0xF0)
+	r.f = u8(val & 0xFF)
 }
 
 fn (mut r Registers) write_bc(val u16) {
 	r.b = u8(val >> 8)
-	r.c = u8(val & 0xF0)
+	r.c = u8(val & 0xFF)
 }
 
 fn (mut r Registers) write_de(val u16) {
 	r.d = u8(val >> 8)
-	r.e = u8(val & 0xF0)
+	r.e = u8(val & 0xFF)
 }
 
 fn (mut r Registers) write_hl(val u16) {
 	r.h = u8(val >> 8)
-	r.l = u8(val & 0xF0)
+	r.l = u8(val & 0xFF)
 }
 
 fn (r &Registers) get_flag(f Flag) bool {
-	return (r.f & u8(f)) == 1
+	return (r.f & u8(f)) > 0
 }
 
 fn (mut r Registers) set_flag(f Flag, val bool) {
