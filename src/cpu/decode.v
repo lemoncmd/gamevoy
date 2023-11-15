@@ -180,12 +180,12 @@ fn (mut c Cpu) cb_decode(mut bus Peripherals) {
 		0x47 { c.bit(bus, 0, Reg8.a) }
 		0x48 { c.bit(bus, 1, Reg8.b) }
 		0x49 { c.bit(bus, 1, Reg8.c) }
-		0x4a { c.bit(bus, 1, Reg8.d) }
-		0x4b { c.bit(bus, 1, Reg8.e) }
-		0x4c { c.bit(bus, 1, Reg8.h) }
-		0x4d { c.bit(bus, 1, Reg8.l) }
-		0x4e { c.bit(bus, 1, Indirect.hl) }
-		0x4f { c.bit(bus, 1, Reg8.a) }
+		0x4A { c.bit(bus, 1, Reg8.d) }
+		0x4B { c.bit(bus, 1, Reg8.e) }
+		0x4C { c.bit(bus, 1, Reg8.h) }
+		0x4D { c.bit(bus, 1, Reg8.l) }
+		0x4E { c.bit(bus, 1, Indirect.hl) }
+		0x4F { c.bit(bus, 1, Reg8.a) }
 		0x50 { c.bit(bus, 2, Reg8.b) }
 		0x51 { c.bit(bus, 2, Reg8.c) }
 		0x52 { c.bit(bus, 2, Reg8.d) }
@@ -196,12 +196,12 @@ fn (mut c Cpu) cb_decode(mut bus Peripherals) {
 		0x57 { c.bit(bus, 2, Reg8.a) }
 		0x58 { c.bit(bus, 3, Reg8.b) }
 		0x59 { c.bit(bus, 3, Reg8.c) }
-		0x5a { c.bit(bus, 3, Reg8.d) }
-		0x5b { c.bit(bus, 3, Reg8.e) }
-		0x5c { c.bit(bus, 3, Reg8.h) }
-		0x5d { c.bit(bus, 3, Reg8.l) }
-		0x5e { c.bit(bus, 3, Indirect.hl) }
-		0x5f { c.bit(bus, 3, Reg8.a) }
+		0x5A { c.bit(bus, 3, Reg8.d) }
+		0x5B { c.bit(bus, 3, Reg8.e) }
+		0x5C { c.bit(bus, 3, Reg8.h) }
+		0x5D { c.bit(bus, 3, Reg8.l) }
+		0x5E { c.bit(bus, 3, Indirect.hl) }
+		0x5F { c.bit(bus, 3, Reg8.a) }
 		0x60 { c.bit(bus, 4, Reg8.b) }
 		0x61 { c.bit(bus, 4, Reg8.c) }
 		0x62 { c.bit(bus, 4, Reg8.d) }
@@ -212,12 +212,12 @@ fn (mut c Cpu) cb_decode(mut bus Peripherals) {
 		0x67 { c.bit(bus, 4, Reg8.a) }
 		0x68 { c.bit(bus, 5, Reg8.b) }
 		0x69 { c.bit(bus, 5, Reg8.c) }
-		0x6a { c.bit(bus, 5, Reg8.d) }
-		0x6b { c.bit(bus, 5, Reg8.e) }
-		0x6c { c.bit(bus, 5, Reg8.h) }
-		0x6d { c.bit(bus, 5, Reg8.l) }
-		0x6e { c.bit(bus, 5, Indirect.hl) }
-		0x6f { c.bit(bus, 5, Reg8.a) }
+		0x6A { c.bit(bus, 5, Reg8.d) }
+		0x6B { c.bit(bus, 5, Reg8.e) }
+		0x6C { c.bit(bus, 5, Reg8.h) }
+		0x6D { c.bit(bus, 5, Reg8.l) }
+		0x6E { c.bit(bus, 5, Indirect.hl) }
+		0x6F { c.bit(bus, 5, Reg8.a) }
 		0x70 { c.bit(bus, 6, Reg8.b) }
 		0x71 { c.bit(bus, 6, Reg8.c) }
 		0x72 { c.bit(bus, 6, Reg8.d) }
@@ -228,12 +228,12 @@ fn (mut c Cpu) cb_decode(mut bus Peripherals) {
 		0x77 { c.bit(bus, 6, Reg8.a) }
 		0x78 { c.bit(bus, 7, Reg8.b) }
 		0x79 { c.bit(bus, 7, Reg8.c) }
-		0x7a { c.bit(bus, 7, Reg8.d) }
-		0x7b { c.bit(bus, 7, Reg8.e) }
-		0x7c { c.bit(bus, 7, Reg8.h) }
-		0x7d { c.bit(bus, 7, Reg8.l) }
-		0x7e { c.bit(bus, 7, Indirect.hl) }
-		0x7f { c.bit(bus, 7, Reg8.a) }
+		0x7A { c.bit(bus, 7, Reg8.d) }
+		0x7B { c.bit(bus, 7, Reg8.e) }
+		0x7C { c.bit(bus, 7, Reg8.h) }
+		0x7D { c.bit(bus, 7, Reg8.l) }
+		0x7E { c.bit(bus, 7, Indirect.hl) }
+		0x7F { c.bit(bus, 7, Reg8.a) }
 		else { panic('Not implemented: 0xCB ${c.ctx.opcode:02x}') }
 	}
 }

@@ -54,7 +54,7 @@ fn (mut c Cpu) cp[S](bus &Peripherals, src S) {
 	result, carry := util.sub_8(c.regs.a, val, 0)
 	c.regs.set_flag(.z, result == 0)
 	c.regs.set_flag(.n, true)
-	c.regs.set_flag(.h, (c.regs.a & 0xf) < (val & 0xf))
+	c.regs.set_flag(.h, (c.regs.a & 0xF) < (val & 0xF))
 	c.regs.set_flag(.c, carry == 1)
 }
 
@@ -66,7 +66,7 @@ fn (mut c Cpu) inc[S](mut bus Peripherals, src S) {
 				result := val + 1
 				c.regs.set_flag(.z, result == 0)
 				c.regs.set_flag(.n, false)
-				c.regs.set_flag(.h, v & 0xf == 0xf)
+				c.regs.set_flag(.h, val & 0xF == 0xF)
 				c.ctx.in_ireg = result
 				c.in_go(1)
 			}
@@ -112,7 +112,7 @@ fn (mut c Cpu) dec[S](mut bus Peripherals, src S) {
 				result := val - 1
 				c.regs.set_flag(.z, result == 0)
 				c.regs.set_flag(.n, true)
-				c.regs.set_flag(.h, v & 0xf == 0)
+				c.regs.set_flag(.h, val & 0xF == 0)
 				c.ctx.in_ireg = result
 				c.in_go(1)
 			}
