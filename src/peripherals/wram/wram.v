@@ -11,7 +11,7 @@ pub fn WRam.new() WRam {
 	return WRam{}
 }
 
-pub fn (w WRam) read(addr u16) u8 {
+pub fn (w &WRam) read(addr u16) u8 {
 	return w.ram[addr & (wram.size - 1)]
 }
 

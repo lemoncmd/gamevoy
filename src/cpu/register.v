@@ -21,19 +21,19 @@ enum Flag as u8 {
 	c = 0b00010000
 }
 
-fn (r Registers) read_af() u16 {
+fn (r &Registers) read_af() u16 {
 	return (u16(r.a) << 8) | u16(r.f)
 }
 
-fn (r Registers) read_bc() u16 {
+fn (r &Registers) read_bc() u16 {
 	return (u16(r.b) << 8) | u16(r.c)
 }
 
-fn (r Registers) read_de() u16 {
+fn (r &Registers) read_de() u16 {
 	return (u16(r.d) << 8) | u16(r.e)
 }
 
-fn (r Registers) read_hl() u16 {
+fn (r &Registers) read_hl() u16 {
 	return (u16(r.h) << 8) | u16(r.l)
 }
 
@@ -57,7 +57,7 @@ fn (mut r Registers) write_hl(val u16) {
 	r.l = u8(val & 0xF0)
 }
 
-fn (r Registers) get_flag(f Flag) bool {
+fn (r &Registers) get_flag(f Flag) bool {
 	return (r.f & u8(f)) == 1
 }
 
