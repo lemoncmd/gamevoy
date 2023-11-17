@@ -55,6 +55,40 @@ fn (mut c Cpu) ld16[D, S](mut bus Peripherals, dst D, src S) {
 	}
 }
 
+fn (mut c Cpu) ld_sp_hl(bus &Peripherals) {
+	match c.ctx.in_step {
+		0 {
+			c.regs.sp = c.regs.read_hl()
+			c.in_go(1)
+		}
+		1 {
+			c.in_go(0)
+			c.fetch(bus)
+		}
+		else {}
+	}
+}
+
+fn (mut c Cpu) ld_hl_sp(bus &Peripherals) {
+	match c.ctx.in_step {
+		0 {
+			val := c.read8(bus, Imm8{}) or { return }
+			_, carry := util.add_8(u8(c.regs.sp), val, 0)
+			c.regs.set_flag(.z, false)
+			c.regs.set_flag(.n, false)
+			c.regs.set_flag(.h, (c.regs.sp & 0xF) + (val & 0xF) > 0b10000)
+			c.regs.set_flag(.c, carry == 1)
+			c.regs.write_hl(c.regs.sp + u16(i8(val)))
+			c.in_go(1)
+		}
+		1 {
+			c.in_go(0)
+			c.fetch(bus)
+		}
+		else {}
+	}
+}
+
 fn (mut c Cpu) cp[S](bus &Peripherals, src S) {
 	val := c.read8(bus, src) or { return }
 	result, carry := util.sub_8(c.regs.a, val, 0)

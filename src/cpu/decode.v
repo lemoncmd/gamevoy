@@ -90,12 +90,6 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x73 { c.ld(mut bus, Indirect.hl, Reg8.e) }
 		0x74 { c.ld(mut bus, Indirect.hl, Reg8.h) }
 		0x75 { c.ld(mut bus, Indirect.hl, Reg8.l) }
-		0xE0 { c.ld(mut bus, Direct8.dff, Reg8.a) }
-		0xE2 { c.ld(mut bus, Indirect.cff, Reg8.a) }
-		0xEA { c.ld(mut bus, Direct8.d, Reg8.a) }
-		0xF0 { c.ld(mut bus, Reg8.a, Direct8.dff) }
-		0xF2 { c.ld(mut bus, Reg8.a, Indirect.cff) }
-		0xFA { c.ld(mut bus, Reg8.a, Direct8.d) }
 		// 0x76 is halt
 		0x77 { c.ld(mut bus, Indirect.hl, Reg8.a) }
 		0x78 { c.ld(mut bus, Reg8.a, Reg8.b) }
@@ -106,6 +100,14 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x7D { c.ld(mut bus, Reg8.a, Reg8.l) }
 		0x7E { c.ld(mut bus, Reg8.a, Indirect.hl) }
 		0x7F { c.ld(mut bus, Reg8.a, Reg8.a) }
+		0xE0 { c.ld(mut bus, Direct8.dff, Reg8.a) }
+		0xE2 { c.ld(mut bus, Indirect.cff, Reg8.a) }
+		0xEA { c.ld(mut bus, Direct8.d, Reg8.a) }
+		0xF0 { c.ld(mut bus, Reg8.a, Direct8.dff) }
+		0xF2 { c.ld(mut bus, Reg8.a, Indirect.cff) }
+		0xFA { c.ld(mut bus, Reg8.a, Direct8.d) }
+		0xF8 { c.ld_hl_sp(bus) }
+		0xF9 { c.ld_sp_hl(bus) }
 		// halt
 		0x76 { c.halt(bus) }
 		// inc
