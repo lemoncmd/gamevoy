@@ -238,6 +238,13 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0xD5 { c.push(mut bus, Reg16.de) }
 		0xE5 { c.push(mut bus, Reg16.hl) }
 		0xF5 { c.push(mut bus, Reg16.af) }
+		// jp
+		0xC3 { c.jp(bus) }
+		0xC2 { c.jp_c(bus, .nz) }
+		0xCA { c.jp_c(bus, .z) }
+		0xD2 { c.jp_c(bus, .nc) }
+		0xDA { c.jp_c(bus, .c) }
+		0xE9 { c.jp_hl(bus) }
 		// ret
 		0xC9 { c.ret(bus) }
 		// cb prefix

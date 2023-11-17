@@ -243,6 +243,26 @@ fn (mut c Cpu) jr(bus &Peripherals) {
 	}
 }
 
+fn (mut c Cpu) jp(bus &Peripherals) {
+	match c.ctx.in_step {
+		0 {
+			val := c.read16(bus, Imm16{}) or { return }
+			c.regs.pc = val
+			c.in_go(1)
+		}
+		1 {
+			c.in_go(0)
+			c.fetch(bus)
+		}
+		else {}
+	}
+}
+
+fn (mut c Cpu) jp_hl(bus &Peripherals) {
+	c.regs.pc = c.regs.read_hl()
+	c.fetch(bus)
+}
+
 fn (c Cpu) cond(cond Cond) bool {
 	return match cond {
 		.nz { !c.regs.get_flag(.z) }
@@ -260,6 +280,27 @@ fn (mut c Cpu) jr_c(bus &Peripherals, cond Cond) {
 				c.in_go(1)
 				if c.cond(cond) {
 					c.regs.pc += u16(i8(val))
+					return
+				}
+			}
+			1 {
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) jp_c(bus &Peripherals, cond Cond) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read16(bus, Imm16{}) or { return }
+				c.in_go(1)
+				if c.cond(cond) {
+					c.regs.pc = val
 					return
 				}
 			}
