@@ -5,6 +5,7 @@ import peripherals.cartridge { Cartridge }
 import peripherals.wram { WRam }
 import peripherals.hram { HRam }
 import peripherals.ppu { Ppu }
+import cpu.interrupts { Interrupts }
 
 pub struct Peripherals {
 mut:
@@ -26,7 +27,7 @@ pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
 	}
 }
 
-pub fn (p &Peripherals) read(addr u16) u8 {
+pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 	return match addr {
 		0x0000...0x00FF {
 			if p.bootrom.is_active() {
@@ -50,11 +51,17 @@ pub fn (p &Peripherals) read(addr u16) u8 {
 		0xFE00...0xFE9F {
 			p.ppu.read(addr)
 		}
+		0xFF0F {
+			ins.read(addr)
+		}
 		0xFF40...0xFF4B {
 			p.ppu.read(addr)
 		}
 		0xFF80...0xFFFE {
 			p.hram.read(addr)
+		}
+		0xFFFF {
+			ins.read(addr)
 		}
 		else {
 			0xFF
@@ -62,7 +69,7 @@ pub fn (p &Peripherals) read(addr u16) u8 {
 	}
 }
 
-pub fn (mut p Peripherals) write(addr u16, val u8) {
+pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 	match addr {
 		0x0000...0x00FF {
 			if !p.bootrom.is_active() {
@@ -84,11 +91,17 @@ pub fn (mut p Peripherals) write(addr u16, val u8) {
 		0xFE00...0xFE9F {
 			p.ppu.write(addr, val)
 		}
+		0xFF0F {
+			ins.write(addr, val)
+		}
 		0xFF40...0xFF4B {
 			p.ppu.write(addr, val)
 		}
 		0xFF80...0xFFFE {
 			p.hram.write(addr, val)
+		}
+		0xFFFF {
+			ins.write(addr, val)
 		}
 		else {}
 	}

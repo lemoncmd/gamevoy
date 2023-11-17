@@ -96,7 +96,7 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0xF0 { c.ld(mut bus, Reg8.a, Direct8.dff) }
 		0xF2 { c.ld(mut bus, Reg8.a, Indirect.cff) }
 		0xFA { c.ld(mut bus, Reg8.a, Direct8.d) }
-		// 0x76 is hlt
+		// 0x76 is halt
 		0x77 { c.ld(mut bus, Indirect.hl, Reg8.a) }
 		0x78 { c.ld(mut bus, Reg8.a, Reg8.b) }
 		0x79 { c.ld(mut bus, Reg8.a, Reg8.c) }
@@ -106,6 +106,8 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x7D { c.ld(mut bus, Reg8.a, Reg8.l) }
 		0x7E { c.ld(mut bus, Reg8.a, Indirect.hl) }
 		0x7F { c.ld(mut bus, Reg8.a, Reg8.a) }
+		// halt
+		0x76 { c.halt(bus) }
 		// inc
 		0x03 { c.inc16(mut bus, Reg16.bc) }
 		0x13 { c.inc16(mut bus, Reg16.de) }
@@ -164,7 +166,12 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0xCB { c.cb_prefixed(mut bus) }
 		// call
 		0xCD { c.call(mut bus) }
-		0xFF {}
+		// reti
+		0xD9 { c.reti(bus) }
+		// di
+		0xF3 { c.di(bus) }
+		// ei
+		0xFB { c.ei(bus) }
 		else { panic('instruction not implemented: 0x${c.ctx.opcode:02X}') }
 	}
 }

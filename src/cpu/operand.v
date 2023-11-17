@@ -61,7 +61,7 @@ fn (mut c Cpu) read8[T](bus &Peripherals, src T) ?u8 {
 	} $else $if T is Imm8 {
 		match c.ctx.rw_step {
 			0 {
-				c.ctx.rw_ireg = bus.read(c.regs.pc)
+				c.ctx.rw_ireg = bus.read(c.interrupts, c.regs.pc)
 				c.regs.pc++
 				c.rw_go(1)
 				return none
@@ -78,26 +78,26 @@ fn (mut c Cpu) read8[T](bus &Peripherals, src T) ?u8 {
 			0 {
 				c.ctx.rw_ireg = match Indirect(src) {
 					.bc {
-						bus.read(c.regs.read_bc())
+						bus.read(c.interrupts, c.regs.read_bc())
 					}
 					.de {
-						bus.read(c.regs.read_de())
+						bus.read(c.interrupts, c.regs.read_de())
 					}
 					.hl {
-						bus.read(c.regs.read_hl())
+						bus.read(c.interrupts, c.regs.read_hl())
 					}
 					.cff {
-						bus.read(0xFF00 | u16(c.regs.c))
+						bus.read(c.interrupts, 0xFF00 | u16(c.regs.c))
 					}
 					.hld {
 						addr := c.regs.read_hl()
 						c.regs.write_hl(addr - 1)
-						bus.read(addr)
+						bus.read(c.interrupts, addr)
 					}
 					.hli {
 						addr := c.regs.read_hl()
 						c.regs.write_hl(addr + 1)
-						bus.read(addr)
+						bus.read(c.interrupts, addr)
 					}
 				}
 				c.rw_go(1)
@@ -113,7 +113,7 @@ fn (mut c Cpu) read8[T](bus &Peripherals, src T) ?u8 {
 	} $else $if T is Direct8 {
 		match c.ctx.rw_step {
 			0 {
-				c.ctx.rw_ireg = bus.read(c.regs.pc)
+				c.ctx.rw_ireg = bus.read(c.interrupts, c.regs.pc)
 				c.regs.pc++
 				c.rw_go(1)
 				if src == Direct8.dff {
@@ -123,13 +123,13 @@ fn (mut c Cpu) read8[T](bus &Peripherals, src T) ?u8 {
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.regs.pc)) << 8
+				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
 			}
 			2 {
-				c.ctx.rw_ireg = bus.read(u16(c.ctx.rw_ireg))
+				c.ctx.rw_ireg = bus.read(c.interrupts, u16(c.ctx.rw_ireg))
 				c.rw_go(3)
 				return none
 			}
@@ -161,26 +161,26 @@ fn (mut c Cpu) write8[T](mut bus Peripherals, dst T, val u8) ? {
 			0 {
 				match Indirect(dst) {
 					.bc {
-						bus.write(c.regs.read_bc(), val)
+						bus.write(mut c.interrupts, c.regs.read_bc(), val)
 					}
 					.de {
-						bus.write(c.regs.read_de(), val)
+						bus.write(mut c.interrupts, c.regs.read_de(), val)
 					}
 					.hl {
-						bus.write(c.regs.read_hl(), val)
+						bus.write(mut c.interrupts, c.regs.read_hl(), val)
 					}
 					.cff {
-						bus.write(0xFF00 | u16(c.regs.c), val)
+						bus.write(mut c.interrupts, 0xFF00 | u16(c.regs.c), val)
 					}
 					.hld {
 						addr := c.regs.read_hl()
 						c.regs.write_hl(addr - 1)
-						bus.write(addr, val)
+						bus.write(mut c.interrupts, addr, val)
 					}
 					.hli {
 						addr := c.regs.read_hl()
 						c.regs.write_hl(addr + 1)
-						bus.write(addr, val)
+						bus.write(mut c.interrupts, addr, val)
 					}
 				}
 				c.rw_go(1)
@@ -197,7 +197,7 @@ fn (mut c Cpu) write8[T](mut bus Peripherals, dst T, val u8) ? {
 	} $else $if T is Direct8 {
 		match c.ctx.rw_step {
 			0 {
-				c.ctx.rw_ireg = bus.read(c.regs.pc)
+				c.ctx.rw_ireg = bus.read(c.interrupts, c.regs.pc)
 				c.regs.pc++
 				c.rw_go(1)
 				if dst == Direct8.dff {
@@ -207,13 +207,13 @@ fn (mut c Cpu) write8[T](mut bus Peripherals, dst T, val u8) ? {
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.regs.pc)) << 8
+				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
 			}
 			2 {
-				bus.write(u16(c.ctx.rw_ireg), val)
+				bus.write(mut c.interrupts, u16(c.ctx.rw_ireg), val)
 				c.rw_go(3)
 				return none
 			}
@@ -242,13 +242,13 @@ fn (mut c Cpu) read16[T](bus &Peripherals, src T) ?u16 {
 	} $else $if T is Imm16 {
 		match c.ctx.rw_step {
 			0 {
-				c.ctx.rw_ireg = bus.read(c.regs.pc)
+				c.ctx.rw_ireg = bus.read(c.interrupts, c.regs.pc)
 				c.regs.pc++
 				c.rw_go(1)
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.regs.pc)) << 8
+				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
@@ -263,24 +263,24 @@ fn (mut c Cpu) read16[T](bus &Peripherals, src T) ?u16 {
 	} $else $if T is Direct16 {
 		match c.ctx.rw_step {
 			0 {
-				c.ctx.rw_ireg = bus.read(c.regs.pc)
+				c.ctx.rw_ireg = bus.read(c.interrupts, c.regs.pc)
 				c.regs.pc++
 				c.rw_go(1)
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.regs.pc)) << 8
+				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
 			}
 			2 {
-				c.ctx.rw_ireg |= u32(bus.read(u16(c.ctx.rw_ireg))) << 16
+				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, u16(c.ctx.rw_ireg))) << 16
 				c.rw_go(3)
 				return none
 			}
 			3 {
-				c.ctx.rw_ireg |= u32(bus.read(u16(c.ctx.rw_ireg))) << 24
+				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, u16(c.ctx.rw_ireg))) << 24
 				c.rw_go(4)
 				return none
 			}
@@ -308,24 +308,24 @@ fn (mut c Cpu) write16[T](mut bus Peripherals, dst T, val u16) ? {
 	} $else $if T is Direct16 {
 		match c.ctx.rw_step {
 			0 {
-				c.ctx.rw_ireg = bus.read(c.regs.pc)
+				c.ctx.rw_ireg = bus.read(c.interrupts, c.regs.pc)
 				c.regs.pc++
 				c.rw_go(1)
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.regs.pc)) << 8
+				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
 			}
 			2 {
-				bus.write(u16(c.ctx.rw_ireg), u8(val))
+				bus.write(mut c.interrupts, u16(c.ctx.rw_ireg), u8(val))
 				c.rw_go(3)
 				return none
 			}
 			3 {
-				bus.write(u16(c.ctx.rw_ireg), u8(val >> 8))
+				bus.write(mut c.interrupts, u16(c.ctx.rw_ireg), u8(val >> 8))
 				c.rw_go(4)
 				return none
 			}

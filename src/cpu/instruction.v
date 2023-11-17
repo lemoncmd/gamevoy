@@ -1,6 +1,7 @@
 module cpu
 
 import peripherals { Peripherals }
+import cpu.interrupts
 import util
 
 fn (mut c Cpu) nop(mut bus Peripherals) {
@@ -192,13 +193,13 @@ fn (mut c Cpu) push16(mut bus Peripherals, val u16) ? {
 		}
 		2 {
 			c.regs.sp--
-			bus.write(c.regs.sp, u8(val >> 8))
+			bus.write(mut c.interrupts, c.regs.sp, u8(val >> 8))
 			c.in_go(3)
 			return none
 		}
 		3 {
 			c.regs.sp--
-			bus.write(c.regs.sp, u8(val))
+			bus.write(mut c.interrupts, c.regs.sp, u8(val))
 			c.in_go(4)
 			return none
 		}
@@ -232,13 +233,13 @@ fn (mut c Cpu) push(mut bus Peripherals, src Reg16) {
 fn (mut c Cpu) pop16(bus &Peripherals) ?u16 {
 	match c.ctx.in_step {
 		0 {
-			c.ctx.in_ireg = bus.read(c.regs.sp)
+			c.ctx.in_ireg = bus.read(c.interrupts, c.regs.sp)
 			c.regs.sp++
 			c.in_go(1)
 			return none
 		}
 		1 {
-			c.ctx.in_ireg |= u16(bus.read(c.regs.sp)) << 8
+			c.ctx.in_ireg |= u16(bus.read(c.interrupts, c.regs.sp)) << 8
 			c.regs.sp++
 			c.in_go(2)
 			return none
@@ -335,5 +336,37 @@ fn (mut c Cpu) ret(bus &Peripherals) {
 			c.fetch(bus)
 		}
 		else {}
+	}
+}
+
+fn (mut c Cpu) reti(bus &Peripherals) {
+	match c.ctx.in_step {
+		0...2 {
+			val := c.pop16(bus) or { return }
+			c.regs.pc = val
+			c.in_go(3)
+		}
+		3 {
+			c.interrupts.ime = true
+			c.in_go(0)
+			c.fetch(bus)
+		}
+		else {}
+	}
+}
+
+fn (mut c Cpu) ei(bus &Peripherals) {
+	c.fetch(bus)
+	c.interrupts.ime = true
+}
+
+fn (mut c Cpu) di(bus &Peripherals) {
+	c.interrupts.ime = false
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) halt(bus &Peripherals) {
+	if c.interrupts.get_interrupts().has(interrupts.all_flags) {
+		c.fetch(bus)
 	}
 }
