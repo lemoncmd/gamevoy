@@ -47,7 +47,9 @@ fn (mut c Cpu) call_isr(mut bus Peripherals) {
 				c.push16(mut bus, c.regs.pc) or { return }
 				mut highest := InterruptFlag.vblank
 				find_highest: for {
-					$for value in interrupts.InterruptFlag.values {
+					// vfmt off
+					$for value in InterruptFlag.values {
+						// vfmt on
 						if c.interrupts.get_interrupts().has(value.value) {
 							highest = value.value
 							break find_highest
