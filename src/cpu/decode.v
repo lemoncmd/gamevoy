@@ -246,13 +246,29 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0xDA { c.jp_c(bus, .c) }
 		0xE9 { c.jp_hl(bus) }
 		// ret
+		0xC0 { c.ret_c(bus, .nz) }
+		0xC8 { c.ret_c(bus, .z) }
+		0xD0 { c.ret_c(bus, .nc) }
+		0xD8 { c.ret_c(bus, .c) }
 		0xC9 { c.ret(bus) }
+		0xD9 { c.reti(bus) }
 		// cb prefix
 		0xCB { c.cb_prefixed(mut bus) }
 		// call
+		0xC4 { c.call_c(mut bus, .nz) }
+		0xCC { c.call_c(mut bus, .z) }
+		0xD4 { c.call_c(mut bus, .nc) }
+		0xDC { c.call_c(mut bus, .c) }
 		0xCD { c.call(mut bus) }
-		// reti
-		0xD9 { c.reti(bus) }
+		// rst
+		0xC7 { c.rst(mut bus, 0x00) }
+		0xCF { c.rst(mut bus, 0x08) }
+		0xD7 { c.rst(mut bus, 0x10) }
+		0xDF { c.rst(mut bus, 0x18) }
+		0xE7 { c.rst(mut bus, 0x20) }
+		0xEF { c.rst(mut bus, 0x28) }
+		0xF7 { c.rst(mut bus, 0x30) }
+		0xFF { c.rst(mut bus, 0x38) }
 		// di
 		0xF3 { c.di(bus) }
 		// ei

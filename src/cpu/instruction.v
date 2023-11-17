@@ -348,6 +348,51 @@ fn (mut c Cpu) ret(bus &Peripherals) {
 	}
 }
 
+fn (mut c Cpu) call_c(mut bus Peripherals, cond Cond) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read16(bus, Imm16{}) or { return }
+				if !c.cond(cond) {
+					c.fetch(bus)
+					return
+				}
+				c.in_go(1)
+			}
+			1...4 {
+				c.push16(mut bus, c.regs.pc) or { return }
+				c.regs.pc = u16(c.ctx.in_ireg)
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) ret_c(bus &Peripherals, cond Cond) {
+	match c.ctx.in_step {
+		0...2 {
+			if !c.cond(cond) {
+				c.in_go(3)
+				return
+			}
+			val := c.pop16(bus) or { return }
+			c.regs.pc = val
+			c.in_go(3)
+		}
+		3 {
+			c.in_go(4)
+		}
+		4 {
+			c.in_go(0)
+			c.fetch(bus)
+		}
+		else {}
+	}
+}
+
 fn (mut c Cpu) reti(bus &Peripherals) {
 	match c.ctx.in_step {
 		0...2 {
@@ -361,6 +406,25 @@ fn (mut c Cpu) reti(bus &Peripherals) {
 			c.fetch(bus)
 		}
 		else {}
+	}
+}
+
+fn (mut c Cpu) rst(mut bus Peripherals, addr u8) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = addr
+				c.in_go(1)
+			}
+			1...4 {
+				c.push16(mut bus, c.regs.pc) or { return }
+				c.regs.pc = u16(c.ctx.in_ireg)
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
 	}
 }
 
