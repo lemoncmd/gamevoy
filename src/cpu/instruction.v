@@ -769,3 +769,41 @@ fn (mut c Cpu) bit[S](bus &Peripherals, bit u8, src S) {
 	c.regs.set_flag(.h, true)
 	c.fetch(bus)
 }
+
+fn (mut c Cpu) res[S](mut bus Peripherals, bit u8, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				c.ctx.in_ireg = val & ~(1 << bit)
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) set[S](mut bus Peripherals, bit u8, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				c.ctx.in_ireg = val | 1 << bit
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
