@@ -370,3 +370,193 @@ fn (mut c Cpu) halt(bus &Peripherals) {
 		c.fetch(bus)
 	}
 }
+
+fn (mut c Cpu) add[S](bus &Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read8(bus, src) or { return }
+				c.in_go(1)
+			}
+			1 {
+				result, carry := util.add_8(c.regs.a, u8(c.ctx.in_ireg), 0)
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, (c.regs.a & 0xF) + (c.ctx.in_ireg & 0xF) > 0)
+				c.regs.set_flag(.c, carry == 1)
+				c.regs.a = result
+				c.in_go(2)
+			}
+			2 {
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) adc[S](bus &Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read8(bus, src) or { return }
+				c.in_go(1)
+			}
+			1 {
+				result, carry := util.add_8(c.regs.a, u8(c.ctx.in_ireg), u8(c.regs.get_flag(.c)))
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, (c.regs.a & 0xF) + (c.ctx.in_ireg & 0xF) > 0)
+				c.regs.set_flag(.c, carry == 1)
+				c.regs.a = result
+				c.in_go(2)
+			}
+			2 {
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) sub[S](bus &Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read8(bus, src) or { return }
+				c.in_go(1)
+			}
+			1 {
+				result, carry := util.sub_8(c.regs.a, u8(c.ctx.in_ireg), 0)
+				x := c.regs.a & 0xF
+				y := c.ctx.in_ireg & 0xF
+				diff := x - y
+				borrow_out := (((~x & y) | (~(x ^ y) & diff)) >> 3) & 1
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, borrow_out == 1)
+				c.regs.set_flag(.c, carry == 1)
+				c.regs.a = result
+				c.in_go(2)
+			}
+			2 {
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) sbc[S](bus &Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read8(bus, src) or { return }
+				c.in_go(1)
+			}
+			1 {
+				result, carry := util.sub_8(c.regs.a, u8(c.ctx.in_ireg), u8(c.regs.get_flag(.c)))
+				x := c.regs.a & 0xF
+				y := c.ctx.in_ireg & 0xF
+				diff := x - y - u8(c.regs.get_flag(.c))
+				borrow_out := (((~x & y) | (~(x ^ y) & diff)) >> 3) & 1
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, borrow_out == 1)
+				c.regs.set_flag(.c, carry == 1)
+				c.regs.a = result
+				c.in_go(2)
+			}
+			2 {
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) and[S](bus &Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read8(bus, src) or { return }
+				c.in_go(1)
+			}
+			1 {
+				result := c.regs.a & u8(c.ctx.in_ireg)
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, true)
+				c.regs.set_flag(.c, false)
+				c.regs.a = result
+				c.in_go(2)
+			}
+			2 {
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) xor[S](bus &Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read8(bus, src) or { return }
+				c.in_go(1)
+			}
+			1 {
+				result := c.regs.a ^ u8(c.ctx.in_ireg)
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, false)
+				c.regs.a = result
+				c.in_go(2)
+			}
+			2 {
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) lor[S](bus &Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				c.ctx.in_ireg = c.read8(bus, src) or { return }
+				c.in_go(1)
+			}
+			1 {
+				result := c.regs.a | u8(c.ctx.in_ireg)
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, false)
+				c.regs.a = result
+				c.in_go(2)
+			}
+			2 {
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}

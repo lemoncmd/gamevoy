@@ -140,6 +140,76 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x28 { c.jr_c(bus, .z) }
 		0x30 { c.jr_c(bus, .nc) }
 		0x38 { c.jr_c(bus, .c) }
+		// add
+		0x80 { c.add(bus, Reg8.b) }
+		0x81 { c.add(bus, Reg8.c) }
+		0x82 { c.add(bus, Reg8.d) }
+		0x83 { c.add(bus, Reg8.e) }
+		0x84 { c.add(bus, Reg8.h) }
+		0x85 { c.add(bus, Reg8.l) }
+		0x86 { c.add(bus, Indirect.hl) }
+		0x87 { c.add(bus, Reg8.a) }
+		0xC6 { c.add(bus, Imm8{}) }
+		// adc
+		0x88 { c.adc(bus, Reg8.b) }
+		0x89 { c.adc(bus, Reg8.c) }
+		0x8A { c.adc(bus, Reg8.d) }
+		0x8B { c.adc(bus, Reg8.e) }
+		0x8C { c.adc(bus, Reg8.h) }
+		0x8D { c.adc(bus, Reg8.l) }
+		0x8E { c.adc(bus, Indirect.hl) }
+		0x8F { c.adc(bus, Reg8.a) }
+		0xCE { c.adc(bus, Imm8{}) }
+		// sub
+		0x90 { c.sub(bus, Reg8.b) }
+		0x91 { c.sub(bus, Reg8.c) }
+		0x92 { c.sub(bus, Reg8.d) }
+		0x93 { c.sub(bus, Reg8.e) }
+		0x94 { c.sub(bus, Reg8.h) }
+		0x95 { c.sub(bus, Reg8.l) }
+		0x96 { c.sub(bus, Indirect.hl) }
+		0x97 { c.sub(bus, Reg8.a) }
+		0xD6 { c.sub(bus, Imm8{}) }
+		// sbc
+		0x98 { c.sbc(bus, Reg8.b) }
+		0x99 { c.sbc(bus, Reg8.c) }
+		0x9A { c.sbc(bus, Reg8.d) }
+		0x9B { c.sbc(bus, Reg8.e) }
+		0x9C { c.sbc(bus, Reg8.h) }
+		0x9D { c.sbc(bus, Reg8.l) }
+		0x9E { c.sbc(bus, Indirect.hl) }
+		0x9F { c.sbc(bus, Reg8.a) }
+		0xDE { c.sbc(bus, Imm8{}) }
+		// and
+		0xA0 { c.and(bus, Reg8.b) }
+		0xA1 { c.and(bus, Reg8.c) }
+		0xA2 { c.and(bus, Reg8.d) }
+		0xA3 { c.and(bus, Reg8.e) }
+		0xA4 { c.and(bus, Reg8.h) }
+		0xA5 { c.and(bus, Reg8.l) }
+		0xA6 { c.and(bus, Indirect.hl) }
+		0xA7 { c.and(bus, Reg8.a) }
+		0xE6 { c.and(bus, Imm8{}) }
+		// xor
+		0xA8 { c.xor(bus, Reg8.b) }
+		0xA9 { c.xor(bus, Reg8.c) }
+		0xAA { c.xor(bus, Reg8.d) }
+		0xAB { c.xor(bus, Reg8.e) }
+		0xAC { c.xor(bus, Reg8.h) }
+		0xAD { c.xor(bus, Reg8.l) }
+		0xAE { c.xor(bus, Indirect.hl) }
+		0xAF { c.xor(bus, Reg8.a) }
+		0xEE { c.xor(bus, Imm8{}) }
+		// or
+		0xB0 { c.lor(bus, Reg8.b) }
+		0xB1 { c.lor(bus, Reg8.c) }
+		0xB2 { c.lor(bus, Reg8.d) }
+		0xB3 { c.lor(bus, Reg8.e) }
+		0xB4 { c.lor(bus, Reg8.h) }
+		0xB5 { c.lor(bus, Reg8.l) }
+		0xB6 { c.lor(bus, Indirect.hl) }
+		0xB7 { c.lor(bus, Reg8.a) }
+		0xF6 { c.lor(bus, Imm8{}) }
 		// cp
 		0xB8 { c.cp(bus, Reg8.b) }
 		0xB9 { c.cp(bus, Reg8.c) }
