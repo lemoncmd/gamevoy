@@ -76,7 +76,7 @@ fn (mut c Cpu) ld_hl_sp(bus &Peripherals) {
 			_, carry := util.add_8(u8(c.regs.sp), val, 0)
 			c.regs.set_flag(.z, false)
 			c.regs.set_flag(.n, false)
-			c.regs.set_flag(.h, (c.regs.sp & 0xF) + (val & 0xF) > 0xF)
+			c.regs.set_flag(.h, (u8(c.regs.sp) & 0xF) + (val & 0xF) > 0xF)
 			c.regs.set_flag(.c, carry == 1)
 			c.regs.write_hl(c.regs.sp + u16(i8(val)))
 			c.in_go(1)
@@ -514,7 +514,7 @@ fn (mut c Cpu) add_hl(bus &Peripherals, src Reg16) {
 			val := c.read16(bus, src) or { return }
 			result, carry := util.add_16(c.regs.read_hl(), val, 0)
 			c.regs.set_flag(.n, false)
-			c.regs.set_flag(.h, (c.regs.read_hl() & 0x0FFF) + (c.ctx.in_ireg & 0x0FFF) > 0x0FFF)
+			c.regs.set_flag(.h, (c.regs.read_hl() & 0x0FFF) + (val & 0x0FFF) > 0x0FFF)
 			c.regs.set_flag(.c, carry == 1)
 			c.regs.write_hl(result)
 			c.in_go(1)

@@ -39,7 +39,7 @@ fn (r &Registers) read_hl() u16 {
 
 fn (mut r Registers) write_af(val u16) {
 	r.a = u8(val >> 8)
-	r.f = u8(val & 0xFF)
+	r.f = u8(val & 0xF0)
 }
 
 fn (mut r Registers) write_bc(val u16) {
