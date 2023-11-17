@@ -134,6 +134,14 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x2D { c.dec(mut bus, Reg8.l) }
 		0x35 { c.dec(mut bus, Indirect.hl) }
 		0x3D { c.dec(mut bus, Reg8.a) }
+		// rlca
+		0x07 { c.rlca(bus) }
+		// rrca
+		0x0F { c.rrca(bus) }
+		// rla
+		0x17 { c.rla(bus) }
+		// rra
+		0x1F { c.rra(bus) }
 		// jr
 		0x18 { c.jr(bus) }
 		0x20 { c.jr_c(bus, .nz) }

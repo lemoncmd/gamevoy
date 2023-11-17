@@ -1,5 +1,6 @@
 module cpu
 
+import math.bits
 import peripherals { Peripherals }
 import cpu.interrupts
 import util
@@ -559,4 +560,44 @@ fn (mut c Cpu) lor[S](bus &Peripherals, src S) {
 			else {}
 		}
 	}
+}
+
+fn (mut c Cpu) rlca(bus &Peripherals) {
+	carry := c.regs.a & 0b10000000
+	c.regs.a = bits.rotate_left_8(c.regs.a, 1)
+	c.regs.set_flag(.z, false)
+	c.regs.set_flag(.n, false)
+	c.regs.set_flag(.h, false)
+	c.regs.set_flag(.c, carry > 0)
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) rla(bus &Peripherals) {
+	carry := c.regs.a & 0b10000000
+	c.regs.a = c.regs.a << 1 | u8(c.regs.get_flag(.c))
+	c.regs.set_flag(.z, false)
+	c.regs.set_flag(.n, false)
+	c.regs.set_flag(.h, false)
+	c.regs.set_flag(.c, carry > 0)
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) rrca(bus &Peripherals) {
+	carry := c.regs.a & 1
+	c.regs.a = bits.rotate_left_8(c.regs.a, -1)
+	c.regs.set_flag(.z, false)
+	c.regs.set_flag(.n, false)
+	c.regs.set_flag(.h, false)
+	c.regs.set_flag(.c, carry > 0)
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) rra(bus &Peripherals) {
+	carry := c.regs.a & 1
+	c.regs.a = c.regs.a >> 1 | u8(c.regs.get_flag(.c)) << 7
+	c.regs.set_flag(.z, false)
+	c.regs.set_flag(.n, false)
+	c.regs.set_flag(.h, false)
+	c.regs.set_flag(.c, carry > 0)
+	c.fetch(bus)
 }
