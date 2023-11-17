@@ -13,7 +13,7 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 	}*/
 	match c.ctx.opcode {
 		// nop
-		0x00 { c.nop(mut bus) }
+		0x00 { c.nop(bus) }
 		// ld
 		0x01 { c.ld16(mut bus, Reg16.bc, Imm16{}) }
 		0x11 { c.ld16(mut bus, Reg16.de, Imm16{}) }
@@ -134,6 +134,8 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x2D { c.dec(mut bus, Reg8.l) }
 		0x35 { c.dec(mut bus, Indirect.hl) }
 		0x3D { c.dec(mut bus, Reg8.a) }
+		// stop
+		0x10 { c.stop(bus) }
 		// rlca
 		0x07 { c.rlca(bus) }
 		// rrca
@@ -142,6 +144,14 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x17 { c.rla(bus) }
 		// rra
 		0x1F { c.rra(bus) }
+		// daa
+		0x27 { c.daa(bus) }
+		// cpl
+		0x2F { c.cpl(bus) }
+		// scf
+		0x37 { c.scf(bus) }
+		// ccf
+		0x3F { c.ccf(bus) }
 		// jr
 		0x18 { c.jr(bus) }
 		0x20 { c.jr_c(bus, .nz) }

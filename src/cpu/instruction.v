@@ -5,7 +5,11 @@ import peripherals { Peripherals }
 import cpu.interrupts
 import util
 
-fn (mut c Cpu) nop(mut bus Peripherals) {
+fn (mut c Cpu) nop(bus Peripherals) {
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) stop(bus Peripherals) {
 	c.fetch(bus)
 }
 
@@ -632,6 +636,48 @@ fn (mut c Cpu) lor[S](bus &Peripherals, src S) {
 			else {}
 		}
 	}
+}
+
+fn (mut c Cpu) daa(bus &Peripherals) {
+	mut correction := u8(0)
+	mut cf := false
+	if c.regs.get_flag(.c) || (!c.regs.get_flag(.n) && c.regs.a > 0x99) {
+		cf = true
+		correction |= 0x60
+	}
+	if c.regs.get_flag(.h) || (!c.regs.get_flag(.n) && c.regs.a & 0x0F > 0x09) {
+		correction |= 0x06
+	}
+	if c.regs.get_flag(.n) {
+		c.regs.a -= correction
+	} else {
+		c.regs.a += correction
+	}
+	c.regs.set_flag(.z, c.regs.a == 0)
+	c.regs.set_flag(.h, false)
+	c.regs.set_flag(.c, cf)
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) cpl(bus &Peripherals) {
+	c.regs.a = ~c.regs.a
+	c.regs.set_flag(.n, true)
+	c.regs.set_flag(.h, true)
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) scf(bus &Peripherals) {
+	c.regs.set_flag(.n, false)
+	c.regs.set_flag(.h, false)
+	c.regs.set_flag(.c, true)
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) ccf(bus &Peripherals) {
+	c.regs.set_flag(.n, false)
+	c.regs.set_flag(.h, false)
+	c.regs.set_flag(.c, !c.regs.get_flag(.c))
+	c.fetch(bus)
 }
 
 fn (mut c Cpu) rlca(bus &Peripherals) {
