@@ -76,7 +76,7 @@ fn (mut c Cpu) ld_hl_sp(bus &Peripherals) {
 			_, carry := util.add_8(u8(c.regs.sp), val, 0)
 			c.regs.set_flag(.z, false)
 			c.regs.set_flag(.n, false)
-			c.regs.set_flag(.h, (c.regs.sp & 0xF) + (val & 0xF) > 0b10000)
+			c.regs.set_flag(.h, (c.regs.sp & 0xF) + (val & 0xF) > 0xF)
 			c.regs.set_flag(.c, carry == 1)
 			c.regs.write_hl(c.regs.sp + u16(i8(val)))
 			c.in_go(1)
@@ -493,7 +493,7 @@ fn (mut c Cpu) add[S](bus &Peripherals, src S) {
 				result, carry := util.add_8(c.regs.a, u8(c.ctx.in_ireg), 0)
 				c.regs.set_flag(.z, result == 0)
 				c.regs.set_flag(.n, false)
-				c.regs.set_flag(.h, (c.regs.a & 0xF) + (c.ctx.in_ireg & 0xF) > 0)
+				c.regs.set_flag(.h, (c.regs.a & 0xF) + (c.ctx.in_ireg & 0xF) > 0xF)
 				c.regs.set_flag(.c, carry == 1)
 				c.regs.a = result
 				c.in_go(2)
@@ -508,6 +508,48 @@ fn (mut c Cpu) add[S](bus &Peripherals, src S) {
 	}
 }
 
+fn (mut c Cpu) add_hl(bus &Peripherals, src Reg16) {
+	match c.ctx.in_step {
+		0 {
+			val := c.read16(bus, src) or { return }
+			result, carry := util.add_16(c.regs.read_hl(), val, 0)
+			c.regs.set_flag(.n, false)
+			c.regs.set_flag(.h, (c.regs.read_hl() & 0x0FFF) + (c.ctx.in_ireg & 0x0FFF) > 0x0FFF)
+			c.regs.set_flag(.c, carry == 1)
+			c.regs.write_hl(result)
+			c.in_go(1)
+		}
+		1 {
+			c.in_go(0)
+			c.fetch(bus)
+		}
+		else {}
+	}
+}
+
+fn (mut c Cpu) add_sp(bus &Peripherals) {
+	match c.ctx.in_step {
+		0 {
+			val := c.read8(bus, Imm8{}) or { return }
+			_, carry := util.add_8(u8(c.regs.sp), val, 0)
+			c.regs.set_flag(.z, false)
+			c.regs.set_flag(.n, false)
+			c.regs.set_flag(.h, (u8(c.regs.sp) & 0xF) + (val & 0xF) > 0xF)
+			c.regs.set_flag(.c, carry == 1)
+			c.regs.write_hl(c.regs.sp + u16(i8(val)))
+			c.in_go(1)
+		}
+		1 {
+			c.in_go(2)
+		}
+		2 {
+			c.in_go(0)
+			c.fetch(bus)
+		}
+		else {}
+	}
+}
+
 fn (mut c Cpu) adc[S](bus &Peripherals, src S) {
 	for {
 		match c.ctx.in_step {
@@ -519,7 +561,7 @@ fn (mut c Cpu) adc[S](bus &Peripherals, src S) {
 				result, carry := util.add_8(c.regs.a, u8(c.ctx.in_ireg), u8(c.regs.get_flag(.c)))
 				c.regs.set_flag(.z, result == 0)
 				c.regs.set_flag(.n, false)
-				c.regs.set_flag(.h, (c.regs.a & 0xF) + (c.ctx.in_ireg & 0xF) > 0)
+				c.regs.set_flag(.h, (c.regs.a & 0xF) + (c.ctx.in_ireg & 0xF) > 0xF)
 				c.regs.set_flag(.c, carry == 1)
 				c.regs.a = result
 				c.in_go(2)
@@ -543,13 +585,9 @@ fn (mut c Cpu) sub[S](bus &Peripherals, src S) {
 			}
 			1 {
 				result, carry := util.sub_8(c.regs.a, u8(c.ctx.in_ireg), 0)
-				x := c.regs.a & 0xF
-				y := c.ctx.in_ireg & 0xF
-				diff := x - y
-				borrow_out := (((~x & y) | (~(x ^ y) & diff)) >> 3) & 1
 				c.regs.set_flag(.z, result == 0)
 				c.regs.set_flag(.n, false)
-				c.regs.set_flag(.h, borrow_out == 1)
+				c.regs.set_flag(.h, (c.regs.a & 0xF) < (u8(c.ctx.in_ireg) & 0xF))
 				c.regs.set_flag(.c, carry == 1)
 				c.regs.a = result
 				c.in_go(2)
@@ -573,13 +611,9 @@ fn (mut c Cpu) sbc[S](bus &Peripherals, src S) {
 			}
 			1 {
 				result, carry := util.sub_8(c.regs.a, u8(c.ctx.in_ireg), u8(c.regs.get_flag(.c)))
-				x := c.regs.a & 0xF
-				y := c.ctx.in_ireg & 0xF
-				diff := x - y - u8(c.regs.get_flag(.c))
-				borrow_out := (((~x & y) | (~(x ^ y) & diff)) >> 3) & 1
 				c.regs.set_flag(.z, result == 0)
 				c.regs.set_flag(.n, false)
-				c.regs.set_flag(.h, borrow_out == 1)
+				c.regs.set_flag(.h, (c.regs.a & 0xF) < ((u8(c.ctx.in_ireg) + u8(c.regs.get_flag(.c))) & 0xF))
 				c.regs.set_flag(.c, carry == 1)
 				c.regs.a = result
 				c.in_go(2)

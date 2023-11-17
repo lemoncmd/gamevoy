@@ -161,6 +161,10 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x30 { c.jr_c(bus, .nc) }
 		0x38 { c.jr_c(bus, .c) }
 		// add
+		0x09 { c.add_hl(bus, Reg16.bc) }
+		0x19 { c.add_hl(bus, Reg16.de) }
+		0x29 { c.add_hl(bus, Reg16.hl) }
+		0x39 { c.add_hl(bus, Reg16.sp) }
 		0x80 { c.add(bus, Reg8.b) }
 		0x81 { c.add(bus, Reg8.c) }
 		0x82 { c.add(bus, Reg8.d) }
@@ -170,6 +174,7 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x86 { c.add(bus, Indirect.hl) }
 		0x87 { c.add(bus, Reg8.a) }
 		0xC6 { c.add(bus, Imm8{}) }
+		0xE8 { c.add_sp(bus) }
 		// adc
 		0x88 { c.adc(bus, Reg8.b) }
 		0x89 { c.adc(bus, Reg8.c) }
