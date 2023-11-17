@@ -1,45 +1,68 @@
 module cartridge
 
-struct CartridgeHeader {
-	entry_point     [4]u8
-	logo            [48]u8
-	title           [11]u8
-	maker           [4]u8
-	cgb_flag        u8
-	new_licensee    [2]u8
-	sgb_flag        u8
-	cartridge_type  u8
-	rom_size        u8
-	sram_size       u8
-	destination     u8
-	old_license     u8
-	game_version    u8
-	header_checksum u8
-	global_checksum [2]u8
+import peripherals.cartridge.mbc { Mbc }
+
+pub struct Cartridge {
+	rom []u8
+mut:
+	ram []u8
+	mbc mbc.Mbc
 }
 
-pub fn (c &CartridgeHeader) check_sum() {
-	mut sum := u8(0)
-	data := unsafe { &u8(&c) }
-	for i in 0x34 .. 0x4D {
-		sum = sum - unsafe { data[i] } - 1
+pub fn Cartridge.new(rom []u8) Cartridge {
+	header := unsafe {
+		CartridgeOrU8{
+			array: [0x50]u8{init: rom[index + 0x100]}
+		}.header
 	}
-	assert sum == c.header_checksum, 'checksum validation failed'
+	header.check_sum()
+
+	title := unsafe { tos_clone(&header.title[0]) }
+	rom_size := header.rom_size()
+	sram_size := header.sram_size()
+	rom_banks := rom_size >> 14
+	m := Mbc.new(header.cartridge_type, rom_banks)
+
+	println('cartridge info { title: ${title}, type: ${m}, rom_size: ${rom_size} B, sram_size: ${sram_size} B }')
+	assert rom.len == rom_size, 'expected ${rom_size} bytes of cartridge ROM, got ${rom.len}'
+
+	return Cartridge{
+		rom: rom
+		ram: []u8{len: sram_size}
+		mbc: m
+	}
 }
 
-fn (c &CartridgeHeader) rom_size() int {
-	assert c.rom_size <= 0x08, 'invalid rom size: ${c.rom_size}'
-	return 1 << (15 + c.rom_size)
+pub fn (c &Cartridge) read(addr u16) u8 {
+	return match addr {
+		0x0000...0x7FFF {
+			c.rom[c.mbc.get_addr(addr) & (c.rom.len - 1)]
+		}
+		0xA000...0xBFFF {
+			if c.mbc.sram_enable() {
+				c.ram[c.mbc.get_addr(addr) & (c.ram.len - 1)]
+			} else {
+				0xFF
+			}
+		}
+		else {
+			panic('unexpected address for cartridge: ${addr}')
+		}
+	}
 }
 
-fn (c &CartridgeHeader) sram_size() int {
-	return match c.sram_size {
-		0x00 { 0 }
-		0x01 { 0x800 }
-		0x02 { 0x2000 }
-		0x03 { 0x8000 }
-		0x04 { 0x20000 }
-		0x05 { 0x10000 }
-		else { panic('invalid sram size: ${c.sram_size}') }
+pub fn (mut c Cartridge) write(addr u16, val u8) {
+	match addr {
+		0x0000...0x7FFF {
+			c.mbc.write(addr, val)
+		}
+		0xA000...0xBFFF {
+			if c.mbc.sram_enable() {
+				c.ram[c.mbc.get_addr(addr) & (c.ram.len - 1)] = val
+			}
+		}
+		else {
+			panic('unexpected address for cartridge: ${addr}')
+		}
 	}
 }

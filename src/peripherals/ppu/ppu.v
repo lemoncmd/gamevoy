@@ -201,7 +201,7 @@ pub fn (mut p Ppu) write(addr u16, val u8) {
 			p.wx = val
 		}
 		else {
-			panic('unexpected address for ppu: ${addr:04x}')
+			panic('unexpected address for ppu: 0x${addr:04x}')
 		}
 	}
 }

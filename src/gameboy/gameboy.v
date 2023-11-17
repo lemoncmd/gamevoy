@@ -4,6 +4,7 @@ import gg
 import cpu { Cpu }
 import peripherals { Peripherals }
 import peripherals.bootrom { BootRom }
+import peripherals.cartridge { Cartridge }
 
 pub struct Gameboy {
 mut:
@@ -13,9 +14,9 @@ mut:
 	image_idx   int
 }
 
-pub fn Gameboy.new(b BootRom) &Gameboy {
+pub fn Gameboy.new(br BootRom, cg Cartridge) &Gameboy {
 	c := Cpu.new()
-	p := Peripherals.new(b)
+	p := Peripherals.new(br, cg)
 	mut ret := &Gameboy{
 		cpu: c
 		peripherals: p
