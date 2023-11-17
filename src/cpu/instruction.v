@@ -153,39 +153,6 @@ fn (mut c Cpu) dec16[S](mut bus Peripherals, src S) {
 	}
 }
 
-fn (mut c Cpu) rl[S](mut bus Peripherals, src S) {
-	for {
-		match c.ctx.in_step {
-			0 {
-				val := c.read8(bus, src) or { return }
-				result := (val << 1) | u8(c.regs.get_flag(.c))
-				c.regs.set_flag(.z, result == 0)
-				c.regs.set_flag(.n, false)
-				c.regs.set_flag(.h, false)
-				c.regs.set_flag(.c, val & 0x80 > 0)
-				c.ctx.in_ireg = result
-				c.in_go(1)
-			}
-			1 {
-				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
-				c.in_go(0)
-				c.fetch(bus)
-				return
-			}
-			else {}
-		}
-	}
-}
-
-fn (mut c Cpu) bit[S](bus &Peripherals, bit u8, src S) {
-	mut v := c.read8(bus, src) or { return }
-	v &= 1 << bit
-	c.regs.set_flag(.z, v == 0)
-	c.regs.set_flag(.n, false)
-	c.regs.set_flag(.h, true)
-	c.fetch(bus)
-}
-
 fn (mut c Cpu) push16(mut bus Peripherals, val u16) ? {
 	match c.ctx.in_step {
 		1 {
@@ -599,5 +566,206 @@ fn (mut c Cpu) rra(bus &Peripherals) {
 	c.regs.set_flag(.n, false)
 	c.regs.set_flag(.h, false)
 	c.regs.set_flag(.c, carry > 0)
+	c.fetch(bus)
+}
+
+fn (mut c Cpu) rlc[S](mut bus Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				result := bits.rotate_left_8(val, 1)
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, val & 0x80 > 0)
+				c.ctx.in_ireg = result
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) rrc[S](mut bus Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				result := bits.rotate_left_8(val, -1)
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, val & 1 > 0)
+				c.ctx.in_ireg = result
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) rl[S](mut bus Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				result := val << 1 | u8(c.regs.get_flag(.c))
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, val & 0x80 > 0)
+				c.ctx.in_ireg = result
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) rr[S](mut bus Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				result := val >> 1 | u8(c.regs.get_flag(.c)) << 7
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, val & 1 > 0)
+				c.ctx.in_ireg = result
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) sla[S](mut bus Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				result := val << 1
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, val & 0x80 > 0)
+				c.ctx.in_ireg = result
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) sra[S](mut bus Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				result := u8(i8(val) >> 1)
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, val & 1 > 0)
+				c.ctx.in_ireg = result
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) swap[S](mut bus Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				result := val >> 4 | val << 4
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, false)
+				c.ctx.in_ireg = result
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) srl[S](mut bus Peripherals, src S) {
+	for {
+		match c.ctx.in_step {
+			0 {
+				val := c.read8(bus, src) or { return }
+				result := val >> 1
+				c.regs.set_flag(.z, result == 0)
+				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.h, false)
+				c.regs.set_flag(.c, val & 1 > 0)
+				c.ctx.in_ireg = result
+				c.in_go(1)
+			}
+			1 {
+				c.write8(mut bus, src, u8(c.ctx.in_ireg)) or { return }
+				c.in_go(0)
+				c.fetch(bus)
+				return
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut c Cpu) bit[S](bus &Peripherals, bit u8, src S) {
+	mut v := c.read8(bus, src) or { return }
+	v &= 1 << bit
+	c.regs.set_flag(.z, v == 0)
+	c.regs.set_flag(.n, false)
+	c.regs.set_flag(.h, true)
 	c.fetch(bus)
 }

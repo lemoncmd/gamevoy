@@ -256,6 +256,24 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 
 fn (mut c Cpu) cb_decode(mut bus Peripherals) {
 	match c.ctx.opcode {
+		// rlc
+		0x00 { c.rlc(mut bus, Reg8.b) }
+		0x01 { c.rlc(mut bus, Reg8.c) }
+		0x02 { c.rlc(mut bus, Reg8.d) }
+		0x03 { c.rlc(mut bus, Reg8.e) }
+		0x04 { c.rlc(mut bus, Reg8.h) }
+		0x05 { c.rlc(mut bus, Reg8.l) }
+		0x06 { c.rlc(mut bus, Indirect.hl) }
+		0x07 { c.rlc(mut bus, Reg8.a) }
+		// rrc
+		0x08 { c.rrc(mut bus, Reg8.b) }
+		0x09 { c.rrc(mut bus, Reg8.c) }
+		0x0A { c.rrc(mut bus, Reg8.d) }
+		0x0B { c.rrc(mut bus, Reg8.e) }
+		0x0C { c.rrc(mut bus, Reg8.h) }
+		0x0D { c.rrc(mut bus, Reg8.l) }
+		0x0E { c.rrc(mut bus, Indirect.hl) }
+		0x0F { c.rrc(mut bus, Reg8.a) }
 		// rl
 		0x10 { c.rl(mut bus, Reg8.b) }
 		0x11 { c.rl(mut bus, Reg8.c) }
@@ -265,6 +283,51 @@ fn (mut c Cpu) cb_decode(mut bus Peripherals) {
 		0x15 { c.rl(mut bus, Reg8.l) }
 		0x16 { c.rl(mut bus, Indirect.hl) }
 		0x17 { c.rl(mut bus, Reg8.a) }
+		// rr
+		0x18 { c.rr(mut bus, Reg8.b) }
+		0x19 { c.rr(mut bus, Reg8.c) }
+		0x1A { c.rr(mut bus, Reg8.d) }
+		0x1B { c.rr(mut bus, Reg8.e) }
+		0x1C { c.rr(mut bus, Reg8.h) }
+		0x1D { c.rr(mut bus, Reg8.l) }
+		0x1E { c.rr(mut bus, Indirect.hl) }
+		0x1F { c.rr(mut bus, Reg8.a) }
+		// sla
+		0x20 { c.sla(mut bus, Reg8.b) }
+		0x21 { c.sla(mut bus, Reg8.c) }
+		0x22 { c.sla(mut bus, Reg8.d) }
+		0x23 { c.sla(mut bus, Reg8.e) }
+		0x24 { c.sla(mut bus, Reg8.h) }
+		0x25 { c.sla(mut bus, Reg8.l) }
+		0x26 { c.sla(mut bus, Indirect.hl) }
+		0x27 { c.sla(mut bus, Reg8.a) }
+		// sra
+		0x28 { c.sra(mut bus, Reg8.b) }
+		0x29 { c.sra(mut bus, Reg8.c) }
+		0x2A { c.sra(mut bus, Reg8.d) }
+		0x2B { c.sra(mut bus, Reg8.e) }
+		0x2C { c.sra(mut bus, Reg8.h) }
+		0x2D { c.sra(mut bus, Reg8.l) }
+		0x2E { c.sra(mut bus, Indirect.hl) }
+		0x2F { c.sra(mut bus, Reg8.a) }
+		// swap
+		0x30 { c.swap(mut bus, Reg8.b) }
+		0x31 { c.swap(mut bus, Reg8.c) }
+		0x32 { c.swap(mut bus, Reg8.d) }
+		0x33 { c.swap(mut bus, Reg8.e) }
+		0x34 { c.swap(mut bus, Reg8.h) }
+		0x35 { c.swap(mut bus, Reg8.l) }
+		0x36 { c.swap(mut bus, Indirect.hl) }
+		0x37 { c.swap(mut bus, Reg8.a) }
+		// srl
+		0x38 { c.srl(mut bus, Reg8.b) }
+		0x39 { c.srl(mut bus, Reg8.c) }
+		0x3A { c.srl(mut bus, Reg8.d) }
+		0x3B { c.srl(mut bus, Reg8.e) }
+		0x3C { c.srl(mut bus, Reg8.h) }
+		0x3D { c.srl(mut bus, Reg8.l) }
+		0x3E { c.srl(mut bus, Indirect.hl) }
+		0x3F { c.srl(mut bus, Reg8.a) }
 		// bit
 		0x40 { c.bit(bus, 0, Reg8.b) }
 		0x41 { c.bit(bus, 0, Reg8.c) }
