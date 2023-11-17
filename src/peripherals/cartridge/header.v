@@ -18,20 +18,11 @@ struct CartridgeHeader {
 	global_checksum [2]u8
 }
 
-union CartridgeOrU8 {
-	header CartridgeHeader
-	array  [0x50]u8
-}
-
 fn (c &CartridgeHeader) check_sum() {
 	mut sum := u8(0)
-	data := unsafe {
-		CartridgeOrU8{
-			header: c
-		}.array
-	}
+	data := &u8(&c.entry_point[0])
 	for i in 0x34 .. 0x4D {
-		sum = sum - data[i] - 1
+		sum = sum - unsafe { data[i] } - 1
 	}
 	assert sum == c.header_checksum, 'checksum validation failed'
 }

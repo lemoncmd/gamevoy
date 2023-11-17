@@ -10,11 +10,7 @@ mut:
 }
 
 pub fn Cartridge.new(rom []u8) Cartridge {
-	header := unsafe {
-		CartridgeOrU8{
-			array: [0x50]u8{init: rom[index + 0x100]}
-		}.header
-	}
+	header := unsafe { *(&CartridgeHeader(&rom[0x100])) }
 	header.check_sum()
 
 	title := unsafe { tos_clone(&header.title[0]) }
