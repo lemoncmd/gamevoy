@@ -245,7 +245,7 @@ fn (mut c Cpu) pop16(bus &Peripherals) ?u16 {
 			return none
 		}
 		1 {
-			c.ctx.in_ireg |= u16(bus.read(c.interrupts, c.regs.sp)) << 8
+			c.ctx.in_ireg += u16(bus.read(c.interrupts, c.regs.sp)) << 8
 			c.regs.sp++
 			c.in_go(2)
 			return none
@@ -561,7 +561,8 @@ fn (mut c Cpu) adc[S](bus &Peripherals, src S) {
 				result, carry := util.add_8(c.regs.a, u8(c.ctx.in_ireg), u8(c.regs.get_flag(.c)))
 				c.regs.set_flag(.z, result == 0)
 				c.regs.set_flag(.n, false)
-				c.regs.set_flag(.h, (c.regs.a & 0xF) + (c.ctx.in_ireg & 0xF) > 0xF)
+				c.regs.set_flag(.h, (c.regs.a & 0xF) + (u8(c.ctx.in_ireg) & 0xF) +
+					(u8(c.regs.get_flag(.c))) > 0xF)
 				c.regs.set_flag(.c, carry == 1)
 				c.regs.a = result
 				c.in_go(2)
@@ -586,7 +587,7 @@ fn (mut c Cpu) sub[S](bus &Peripherals, src S) {
 			1 {
 				result, carry := util.sub_8(c.regs.a, u8(c.ctx.in_ireg), 0)
 				c.regs.set_flag(.z, result == 0)
-				c.regs.set_flag(.n, false)
+				c.regs.set_flag(.n, true)
 				c.regs.set_flag(.h, (c.regs.a & 0xF) < (u8(c.ctx.in_ireg) & 0xF))
 				c.regs.set_flag(.c, carry == 1)
 				c.regs.a = result
@@ -612,8 +613,9 @@ fn (mut c Cpu) sbc[S](bus &Peripherals, src S) {
 			1 {
 				result, carry := util.sub_8(c.regs.a, u8(c.ctx.in_ireg), u8(c.regs.get_flag(.c)))
 				c.regs.set_flag(.z, result == 0)
-				c.regs.set_flag(.n, false)
-				c.regs.set_flag(.h, (c.regs.a & 0xF) < ((u8(c.ctx.in_ireg) + u8(c.regs.get_flag(.c))) & 0xF))
+				c.regs.set_flag(.n, true)
+				c.regs.set_flag(.h, (c.regs.a & 0xF) < (u8(c.ctx.in_ireg) & 0xF) +
+					u8(c.regs.get_flag(.c)))
 				c.regs.set_flag(.c, carry == 1)
 				c.regs.a = result
 				c.in_go(2)

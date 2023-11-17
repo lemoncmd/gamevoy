@@ -26,7 +26,7 @@ fn (mut c Cpu) decode(mut bus Peripherals) {
 		0x0A { c.ld(mut bus, Reg8.a, Indirect.bc) }
 		0x1A { c.ld(mut bus, Reg8.a, Indirect.de) }
 		0x2A { c.ld(mut bus, Reg8.a, Indirect.hli) }
-		0x3A { c.ld(mut bus, Reg8.a, Indirect.hli) }
+		0x3A { c.ld(mut bus, Reg8.a, Indirect.hld) }
 		0x06 { c.ld(mut bus, Reg8.b, Imm8{}) }
 		0x0E { c.ld(mut bus, Reg8.c, Imm8{}) }
 		0x16 { c.ld(mut bus, Reg8.d, Imm8{}) }
