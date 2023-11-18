@@ -536,7 +536,7 @@ fn (mut c Cpu) add_sp(bus &Peripherals) {
 			c.regs.set_flag(.n, false)
 			c.regs.set_flag(.h, (u8(c.regs.sp) & 0xF) + (val & 0xF) > 0xF)
 			c.regs.set_flag(.c, carry == 1)
-			c.regs.write_hl(c.regs.sp + u16(i8(val)))
+			c.regs.sp += u16(i8(val))
 			c.in_go(1)
 		}
 		1 {

@@ -248,7 +248,7 @@ fn (mut c Cpu) read16[T](bus &Peripherals, src T) ?u16 {
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
+				c.ctx.rw_ireg += u16(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
