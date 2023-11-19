@@ -8,8 +8,8 @@ const m_cycle_clock = 4
 
 fn (mut g Gameboy) init_gg() {
 	g.gg = gg.new_context(
-		width: 160 * 4
-		height: 144 * 4
+		width: 160
+		height: 144
 		create_window: true
 		window_title: 'gamevoy'
 		init_fn: fn (mut g Gameboy) {

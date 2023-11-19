@@ -251,9 +251,9 @@ fn (p &Ppu) get_tile_idx_from_tile_map(tile_map bool, row u8, col u8) u16 {
 	start_addr := 0x1800 | (u16(tile_map) << 10)
 	ret := p.vram[start_addr | ((u16(row) << 5) + u16(col))]
 	return if p.lcdc.has(.tile_data_addressing_mode) {
-		ret
+		u16(ret)
 	} else {
-		ret + 0x100
+		u16(i16(i8(ret)) + 0x100)
 	}
 }
 
