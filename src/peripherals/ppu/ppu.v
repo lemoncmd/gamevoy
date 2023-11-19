@@ -1,5 +1,8 @@
 module ppu
 
+import util
+import cpu.interrupts { Interrupts }
+
 pub const lcd_width = 160
 
 pub const lcd_height = 144
@@ -66,6 +69,25 @@ fn (mut s Stat) set_mode(m Mode) {
 	}
 }
 
+struct Sprite {
+	y        u8
+	x        u8
+	tile_idx u8
+	flags    SpriteFlag
+}
+
+@[flag]
+enum SpriteFlag as u8 {
+	unused0
+	unused1
+	unused2
+	unused3
+	palette
+	x_flip
+	y_flip
+	obj2bg_priority
+}
+
 pub struct Ppu {
 mut:
 	lcdc   Lcdc
@@ -79,6 +101,7 @@ mut:
 	obp1   u8
 	wy     u8
 	wx     u8
+	wly    u8
 	cycles u8 = 1
 	vram   [0x2000]u8
 	oam    [0xA0]u8
@@ -225,7 +248,7 @@ fn (p &Ppu) get_tile_idx_from_tile_map(tile_map bool, row u8, col u8) u16 {
 	}
 }
 
-fn (mut p Ppu) render_bg() {
+fn (mut p Ppu) render_bg(mut bg_prio [lcd_width]bool) {
 	if !p.lcdc.has(.bg_window_enable) {
 		return
 	}
@@ -243,18 +266,107 @@ fn (mut p Ppu) render_bg() {
 			0b10 { 0x55 }
 			else { 0x00 }
 		}
+		bg_prio[i] = pixel != 0
 	}
 }
 
-fn (mut p Ppu) check_lyc_eq_ly() {
+fn (mut p Ppu) render_window(mut bg_prio [lcd_width]bool) {
+	if !p.lcdc.has(.bg_window_enable) || !p.lcdc.has(.window_enable) || p.wy > p.ly {
+		return
+	}
+	mut wly_add := u8(0)
+	y := p.wly
+	for i in 0 .. ppu.lcd_width {
+		x, overflow := util.sub_8(i, p.wx - 7, 0)
+		if overflow > 0 {
+			continue
+		}
+		wly_add = 1
+
+		tile_idx := p.get_tile_idx_from_tile_map(p.lcdc.has(.window_tile_map), y >> 3,
+			x >> 3)
+
+		pixel := p.get_pixel_from_tile(tile_idx, y & 7, x & 7)
+
+		p.buffer[ppu.lcd_width * int(p.ly) + i] = match (p.bgp >> (pixel << 1)) & 0b11 {
+			0b00 { 0xFF }
+			0b01 { 0xAA }
+			0b10 { 0x55 }
+			else { 0x00 }
+		}
+		bg_prio[i] = pixel != 0
+	}
+	p.wly += wly_add
+}
+
+fn (mut p Ppu) render_sprite(bg_prio [lcd_width]bool) {
+	if !p.lcdc.has(.sprite_enable) {
+		return
+	}
+	size := if p.lcdc.has(.sprite_size) { 16 } else { 8 }
+
+	mut sprites := []Sprite{len: 40, init: Sprite{
+		y: p.oam[index * 4]
+		x: p.oam[index * 4 + 1]
+		tile_idx: p.oam[index * 4 + 2]
+		flags: unsafe { SpriteFlag(p.oam[index * 4 + 3]) }
+	}}.map(|it| Sprite{
+		...it
+		y: it.y - 16
+		x: it.x - 8
+	}).filter(p.ly - it.y < size)
+	sprites.trim(10)
+	sprites.reverse_in_place()
+	sprites.sort(b.x < a.x)
+
+	for sprite in sprites {
+		palette := if sprite.flags.has(.palette) { p.obp1 } else { p.obp0 }
+		mut tile_idx := u16(sprite.tile_idx)
+		mut row := u8(if sprite.flags.has(.y_flip) {
+			size - 1 - (p.ly - sprite.y)
+		} else {
+			p.ly - sprite.y
+		})
+		if size == 16 {
+			tile_idx &= 0xFE
+		}
+		tile_idx += u16(row >= 8)
+		row &= 7
+
+		for col in 0 .. 8 {
+			col_flipped := u8(if sprite.flags.has(.x_flip) {
+				7 - col
+			} else {
+				col
+			})
+			pixel := p.get_pixel_from_tile(tile_idx, row, col_flipped)
+			i := int(sprite.x + col)
+			if i < ppu.lcd_width && pixel > 0 {
+				if !sprite.flags.has(.obj2bg_priority) || !bg_prio[i] {
+					p.buffer[ppu.lcd_width * int(p.ly) + i] = match (palette >> (pixel << 1)) & 0b11 {
+						0b00 { 0xFF }
+						0b01 { 0xAA }
+						0b10 { 0x55 }
+						else { 0x00 }
+					}
+				}
+			}
+		}
+	}
+}
+
+fn (mut p Ppu) check_lyc_eq_ly(mut ints Interrupts) {
 	if p.ly == p.lyc {
 		p.stat.set(.lyc_eq_ly)
+		if p.stat.has(.lyc_eq_ly_int) {
+			ints.irq(.stat)
+		}
 	} else {
 		p.stat.clear(.lyc_eq_ly)
 	}
 }
 
-pub fn (mut p Ppu) emulate_cycle() bool {
+pub fn (mut p Ppu) emulate_cycle(mut ints Interrupts) bool {
 	if !p.lcdc.has(.ppu_enable) {
 		return false
 	}
@@ -271,32 +383,49 @@ pub fn (mut p Ppu) emulate_cycle() bool {
 			if p.ly < 144 {
 				p.stat.set_mode(.oamscan)
 				p.cycles = 20
+				if p.stat.has(.oam_scan_int) {
+					ints.irq(.stat)
+				}
 			} else {
 				p.stat.set_mode(.vblank)
 				p.cycles = 114
+				ints.irq(.vblank)
+				if p.stat.has(.vblank_int) {
+					ints.irq(.stat)
+				}
 			}
-			p.check_lyc_eq_ly()
+			p.check_lyc_eq_ly(mut ints)
 		}
 		.vblank {
 			p.ly++
 			if p.ly > 153 {
 				ret = true
 				p.ly = 0
+				p.wly = 0
 				p.stat.set_mode(.oamscan)
 				p.cycles = 20
+				if p.stat.has(.oam_scan_int) {
+					ints.irq(.stat)
+				}
 			} else {
 				p.cycles = 114
 			}
-			p.check_lyc_eq_ly()
+			p.check_lyc_eq_ly(mut ints)
 		}
 		.oamscan {
 			p.stat.set_mode(.drawing)
 			p.cycles = 43
 		}
 		.drawing {
-			p.render_bg()
+			mut bg_prio := [160]bool{}
+			p.render_bg(mut bg_prio)
+			p.render_window(mut bg_prio)
+			p.render_sprite(bg_prio)
 			p.stat.set_mode(.hblank)
 			p.cycles = 51
+			if p.stat.has(.hblank_int) {
+				ints.irq(.stat)
+			}
 		}
 	}
 	return ret
