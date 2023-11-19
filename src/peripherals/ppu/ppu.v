@@ -19,7 +19,7 @@ enum Lcdc as u8 {
 	bg_window_enable
 	sprite_enable
 	sprite_size
-	bg_title_map
+	bg_tile_map
 	tile_data_addressing_mode
 	window_enable
 	window_tile_map
@@ -106,6 +106,8 @@ mut:
 	vram   [0x2000]u8
 	oam    [0xA0]u8
 	buffer [23040]u8
+pub mut:
+	oam_dma ?u16
 }
 
 pub fn Ppu.new() Ppu {
@@ -125,7 +127,11 @@ pub fn (p &Ppu) read(addr u16) u8 {
 		}
 		0xFE00...0xFE9F {
 			if p.stat.get_mode() in [.hblank, .vblank] {
-				p.oam[addr & 0xFF]
+				if p.oam_dma == none {
+					p.oam[addr & 0xFF]
+				} else {
+					0xFF
+				}
 			} else {
 				0xFF
 			}
@@ -177,7 +183,7 @@ pub fn (mut p Ppu) write(addr u16, val u8) {
 			}
 		}
 		0xFE00...0xFE9F {
-			if p.stat.get_mode() in [.hblank, .vblank] {
+			if p.stat.get_mode() in [.hblank, .vblank] && p.oam_dma == none {
 				p.oam[addr & 0xFF] = val
 			}
 		}
@@ -207,6 +213,9 @@ pub fn (mut p Ppu) write(addr u16, val u8) {
 		}
 		0xFF45 {
 			p.lyc = val
+		}
+		0xFF46 {
+			p.oam_dma = u16(val) << 8
 		}
 		0xFF47 {
 			p.bgp = val
@@ -256,7 +265,7 @@ fn (mut p Ppu) render_bg(mut bg_prio [lcd_width]bool) {
 	for i in 0 .. ppu.lcd_width {
 		x := i + p.scx
 
-		tile_idx := p.get_tile_idx_from_tile_map(p.lcdc.has(.bg_title_map), y >> 3, x >> 3)
+		tile_idx := p.get_tile_idx_from_tile_map(p.lcdc.has(.bg_tile_map), y >> 3, x >> 3)
 
 		pixel := p.get_pixel_from_tile(tile_idx, y & 7, x & 7)
 
@@ -316,7 +325,6 @@ fn (mut p Ppu) render_sprite(bg_prio [lcd_width]bool) {
 		x: it.x - 8
 	}).filter(p.ly - it.y < size)
 	sprites.trim(10)
-	sprites.reverse_in_place()
 	sprites.sort(b.x < a.x)
 
 	for sprite in sprites {
@@ -363,6 +371,19 @@ fn (mut p Ppu) check_lyc_eq_ly(mut ints Interrupts) {
 		}
 	} else {
 		p.stat.clear(.lyc_eq_ly)
+	}
+}
+
+pub fn (mut p Ppu) oam_dma_emulate_cycle(val u8) {
+	if addr := p.oam_dma {
+		if p.stat.get_mode() !in [.drawing, .oamscan] {
+			p.oam[addr & 0xFF] = val
+		}
+		p.oam_dma = if u8(addr + 1) < 0xA0 {
+			addr + 1
+		} else {
+			none
+		}
 	}
 }
 

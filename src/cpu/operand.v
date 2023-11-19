@@ -260,37 +260,6 @@ fn (mut c Cpu) read16[T](bus &Peripherals, src T) ?u16 {
 			else {}
 		}
 		return none
-	} $else $if T is Direct16 {
-		match c.ctx.rw_step {
-			0 {
-				c.ctx.rw_ireg = bus.read(c.interrupts, c.regs.pc)
-				c.regs.pc++
-				c.rw_go(1)
-				return none
-			}
-			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
-				c.regs.pc++
-				c.rw_go(2)
-				return none
-			}
-			2 {
-				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, u16(c.ctx.rw_ireg))) << 16
-				c.rw_go(3)
-				return none
-			}
-			3 {
-				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, u16(c.ctx.rw_ireg + 1))) << 24
-				c.rw_go(4)
-				return none
-			}
-			4 {
-				c.rw_go(0)
-				return u16(c.ctx.rw_ireg >> 16)
-			}
-			else {}
-		}
-		return none
 	} $else {
 		$compile_error('unexpected type for read16')
 	}
