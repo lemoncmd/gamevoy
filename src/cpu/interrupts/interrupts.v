@@ -9,7 +9,13 @@ pub enum InterruptFlag as u8 {
 	joypad
 }
 
-pub const all_flags = InterruptFlag.vblank | .stat | .timer | .serial | .joypad
+pub const all_flags = (fn () InterruptFlag {
+	mut f := InterruptFlag.vblank
+	$for value in InterruptFlag.values {
+		f.set(value.value)
+	}
+	return f
+}())
 
 pub struct Interrupts {
 pub mut:

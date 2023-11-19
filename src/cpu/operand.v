@@ -117,13 +117,13 @@ fn (mut c Cpu) read8[T](bus &Peripherals, src T) ?u8 {
 				c.regs.pc++
 				c.rw_go(1)
 				if src == Direct8.dff {
-					c.ctx.rw_ireg |= 0xFF00
+					c.ctx.rw_ireg += 0xFF00
 					c.rw_go(2)
 				}
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
+				c.ctx.rw_ireg += u16(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
@@ -201,13 +201,13 @@ fn (mut c Cpu) write8[T](mut bus Peripherals, dst T, val u8) ? {
 				c.regs.pc++
 				c.rw_go(1)
 				if dst == Direct8.dff {
-					c.ctx.rw_ireg |= 0xFF00
+					c.ctx.rw_ireg += 0xFF00
 					c.rw_go(2)
 				}
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
+				c.ctx.rw_ireg += u16(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
@@ -280,7 +280,7 @@ fn (mut c Cpu) read16[T](bus &Peripherals, src T) ?u16 {
 				return none
 			}
 			3 {
-				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, u16(c.ctx.rw_ireg))) << 24
+				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, u16(c.ctx.rw_ireg + 1))) << 24
 				c.rw_go(4)
 				return none
 			}
@@ -314,7 +314,7 @@ fn (mut c Cpu) write16[T](mut bus Peripherals, dst T, val u16) ? {
 				return none
 			}
 			1 {
-				c.ctx.rw_ireg |= u32(bus.read(c.interrupts, c.regs.pc)) << 8
+				c.ctx.rw_ireg += u16(bus.read(c.interrupts, c.regs.pc)) << 8
 				c.regs.pc++
 				c.rw_go(2)
 				return none
@@ -325,7 +325,7 @@ fn (mut c Cpu) write16[T](mut bus Peripherals, dst T, val u16) ? {
 				return none
 			}
 			3 {
-				bus.write(mut c.interrupts, u16(c.ctx.rw_ireg), u8(val >> 8))
+				bus.write(mut c.interrupts, u16(c.ctx.rw_ireg + 1), u8(val >> 8))
 				c.rw_go(4)
 				return none
 			}

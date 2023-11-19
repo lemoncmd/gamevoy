@@ -413,7 +413,7 @@ fn (mut c Cpu) ret_c(bus &Peripherals, cond Cond) {
 	match c.ctx.in_step {
 		0...2 {
 			if !c.cond(cond) {
-				c.in_go(3)
+				c.in_go(4)
 				return
 			}
 			val := c.pop16(bus) or { return }

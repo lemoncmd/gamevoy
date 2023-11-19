@@ -5,6 +5,7 @@ import peripherals.cartridge { Cartridge }
 import peripherals.wram { WRam }
 import peripherals.hram { HRam }
 import peripherals.ppu { Ppu }
+import peripherals.timer { Timer }
 import cpu.interrupts { Interrupts }
 
 pub struct Peripherals {
@@ -14,7 +15,8 @@ mut:
 	wram      wram.WRam
 	hram      hram.HRam
 pub mut:
-	ppu ppu.Ppu
+	ppu   ppu.Ppu
+	timer timer.Timer
 }
 
 pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
@@ -24,6 +26,7 @@ pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
 		wram: WRam.new()
 		hram: HRam.new()
 		ppu: Ppu.new()
+		timer: Timer.new()
 	}
 }
 
@@ -50,6 +53,9 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 		}
 		0xFE00...0xFE9F {
 			p.ppu.read(addr)
+		}
+		0xFF04...0xFF07 {
+			p.timer.read(addr)
 		}
 		0xFF0F {
 			ins.read(addr)
@@ -90,6 +96,9 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		}
 		0xFE00...0xFE9F {
 			p.ppu.write(addr, val)
+		}
+		0xFF04...0xFF07 {
+			p.timer.write(addr, val)
 		}
 		0xFF0F {
 			ins.write(addr, val)

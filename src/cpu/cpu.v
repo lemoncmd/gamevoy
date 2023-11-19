@@ -16,8 +16,9 @@ mut:
 
 pub struct Cpu {
 mut:
-	regs       Registers
-	ctx        Ctx
+	regs Registers
+	ctx  Ctx
+pub mut:
 	interrupts interrupts.Interrupts
 }
 
@@ -73,6 +74,7 @@ fn (mut c Cpu) call_isr(mut bus Peripherals) {
 				c.interrupts.ime = false
 				c.in_go(0)
 				c.fetch(bus)
+				return
 			}
 			else {}
 		}
