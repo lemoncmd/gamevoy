@@ -6,6 +6,7 @@ import peripherals { Peripherals }
 import peripherals.bootrom { BootRom }
 import peripherals.cartridge { Cartridge }
 import peripherals.joypad { Button }
+import sokol.audio
 
 pub struct Gameboy {
 mut:
@@ -23,6 +24,7 @@ pub fn Gameboy.new(br BootRom, cg Cartridge) &Gameboy {
 		peripherals: p
 	}
 	ret.cpu.init(ret.peripherals)
+	ret.init_audio()
 	ret.init_gg()
 	return ret
 }
@@ -33,9 +35,17 @@ pub fn (mut g Gameboy) run() ! {
 	gg_ctx.run()
 }
 
+fn (mut g Gameboy) quit() {
+	if gg_ctx := g.gg {
+		gg_ctx.quit()
+	}
+	audio.shutdown()
+}
+
 fn (mut g Gameboy) emulate_cycle() bool {
 	g.cpu.emulate_cycle(mut g.peripherals)
 	g.peripherals.timer.emulate_cycle(mut g.cpu.interrupts)
+	g.peripherals.apu.emulate_cycle()
 	if addr := g.peripherals.ppu.oam_dma {
 		g.peripherals.ppu.oam_dma_emulate_cycle(g.peripherals.read(g.cpu.interrupts, addr))
 	}

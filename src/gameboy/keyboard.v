@@ -21,9 +21,7 @@ fn key2joy(keycode gg.KeyCode) ?Button {
 
 fn on_key_down(c gg.KeyCode, _ gg.Modifier, mut data Gameboy) {
 	if c == .escape {
-		if gg_ctx := data.gg {
-			gg_ctx.quit()
-		}
+		data.quit()
 	}
 	if b := key2joy(c) {
 		data.on_key_down(b)

@@ -1,5 +1,6 @@
 module gameboy
 
+import math
 import gg
 import sokol.sapp
 
@@ -25,7 +26,7 @@ fn (mut g Gameboy) init_gg() {
 				gg_ctx.begin()
 			}
 			mut not_rendered := true
-			fps := int(0.5 + 1.0 / sapp.frame_duration())
+			fps := math.max(int(0.5 + 1.0 / sapp.frame_duration()), 60)
 			for _ in 0 .. (gameboy.cpu_clock_hz / gameboy.m_cycle_clock) / fps {
 				if g.emulate_cycle() {
 					not_rendered = false
