@@ -102,7 +102,7 @@ mut:
 	wy     u8
 	wx     u8
 	wly    u8
-	cycles u8 = 1
+	cycles u8 = 20
 	vram   [0x2000]u8
 	oam    [0xA0]u8
 	buffer [23040]u8

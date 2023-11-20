@@ -25,7 +25,7 @@ fn (mut g Gameboy) init_gg() {
 				gg_ctx.begin()
 			}
 			mut not_rendered := true
-			fps := int(0.5 + 1.0 / sapp.frame_duration() / 0.8)
+			fps := int(0.5 + 1.0 / sapp.frame_duration())
 			for _ in 0 .. (gameboy.cpu_clock_hz / gameboy.m_cycle_clock) / fps {
 				if g.emulate_cycle() {
 					not_rendered = false

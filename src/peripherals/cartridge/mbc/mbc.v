@@ -61,25 +61,25 @@ pub fn (mut m Mbc) write(addr u16, val u8) {
 pub fn (m &Mbc) get_addr(addr u16) int {
 	return match m {
 		NoMbc {
-			addr
+			int(addr)
 		}
 		Mbc1 {
 			match addr {
 				0x0000...0x3FFF {
 					if m.bank_mode {
-						(int(m.high_bank) << 19) | (addr & 0x3FFF)
+						(u32(m.high_bank) << 19) | u32(addr & 0x3FFF)
 					} else {
 						addr & 0x3FFF
 					}
 				}
 				0x4000...0x7FFF {
-					(int(m.high_bank) << 19) | ((int(m.low_bank) & (m.rom_banks - 1)) << 14) | (addr & 0x3FFF)
+					(u32(m.high_bank) << 19) | ((u32(m.low_bank) & u32(m.rom_banks - 1)) << 14) | u32(addr & 0x3FFF)
 				}
 				0xA000...0xBFFF {
 					if m.bank_mode {
 						(int(m.high_bank) << 13) | (addr & 0x1FFF)
 					} else {
-						addr & 0x3FFF
+						addr & 0x1FFF
 					}
 				}
 				else {

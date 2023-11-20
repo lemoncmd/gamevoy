@@ -94,11 +94,11 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		0x8000...0x9FFF {
 			p.ppu.write(addr, val)
 		}
+		0xA000...0xBFFF {
+			p.cartridge.write(addr, val)
+		}
 		0xC000...0xFDFF {
 			p.wram.write(addr, val)
-		}
-		0xFF50 {
-			p.bootrom.write(addr, val)
 		}
 		0xFE00...0xFE9F {
 			p.ppu.write(addr, val)
@@ -114,6 +114,9 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		}
 		0xFF40...0xFF4B {
 			p.ppu.write(addr, val)
+		}
+		0xFF50 {
+			p.bootrom.write(addr, val)
 		}
 		0xFF80...0xFFFE {
 			p.hram.write(addr, val)
