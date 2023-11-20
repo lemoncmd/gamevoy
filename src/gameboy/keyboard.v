@@ -9,27 +9,30 @@ fn key2joy(keycode gg.KeyCode) ?Button {
 		.down { .down }
 		.left { .left }
 		.right { .right }
-		._2 { .@select }
-		._1 { .start }
-		.backspace { .b }
-		.enter { .a }
 		.z { .a }
 		.x { .b }
+		.c { .start }
+		.v { .@select }
 		else { none }
 	}
 }
 
-fn on_key_down(c gg.KeyCode, _ gg.Modifier, mut data Gameboy) {
+fn on_key_down(c gg.KeyCode, _ gg.Modifier, mut g Gameboy) {
 	if c == .escape {
-		data.quit()
+		if gg_ctx := g.gg {
+			gg_ctx.quit()
+		}
+	}
+	if c == .enter {
+		g.save()
 	}
 	if b := key2joy(c) {
-		data.on_key_down(b)
+		g.on_key_down(b)
 	}
 }
 
-fn on_key_up(c gg.KeyCode, _ gg.Modifier, mut data Gameboy) {
+fn on_key_up(c gg.KeyCode, _ gg.Modifier, mut g Gameboy) {
 	if b := key2joy(c) {
-		data.on_key_up(b)
+		g.on_key_up(b)
 	}
 }

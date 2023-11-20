@@ -43,6 +43,10 @@ fn (mut g Gameboy) init_gg() {
 				gg_ctx.end()
 			}
 		}
+		quit_fn: fn (_ &gg.Event, g &Gameboy) {
+			g.save()
+			g.quit_audio()
+		}
 		keydown_fn: on_key_down
 		keyup_fn: on_key_up
 		user_data: &g

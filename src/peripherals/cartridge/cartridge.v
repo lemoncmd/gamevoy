@@ -3,7 +3,8 @@ module cartridge
 import peripherals.cartridge.mbc { Mbc }
 
 pub struct Cartridge {
-	rom []u8
+	rom     []u8
+	savable bool
 mut:
 	ram []u8
 	mbc mbc.Mbc
@@ -26,6 +27,7 @@ pub fn Cartridge.new(rom []u8) Cartridge {
 		rom: rom
 		ram: []u8{len: sram_size}
 		mbc: m
+		savable: header.is_savable()
 	}
 }
 
@@ -61,4 +63,17 @@ pub fn (mut c Cartridge) write(addr u16, val u8) {
 			panic('unexpected address for cartridge: ${addr}')
 		}
 	}
+}
+
+pub fn (c &Cartridge) save() []u8 {
+	return c.ram.clone()
+}
+
+pub fn (mut c Cartridge) load(data []u8) {
+	assert data.len == c.ram.len, 'expected ${c.ram.len} bytes of save data, got ${data.len}'
+	c.ram = data
+}
+
+pub fn (c &Cartridge) is_savable() bool {
+	return c.savable
 }

@@ -12,15 +12,15 @@ import cpu.interrupts { Interrupts }
 
 pub struct Peripherals {
 mut:
-	bootrom   bootrom.BootRom
-	cartridge cartridge.Cartridge
-	wram      wram.WRam
-	hram      hram.HRam
+	bootrom bootrom.BootRom
+	wram    wram.WRam
+	hram    hram.HRam
 pub mut:
-	ppu    ppu.Ppu
-	apu    apu.Apu
-	timer  timer.Timer
-	joypad joypad.Joypad
+	cartridge cartridge.Cartridge
+	ppu       ppu.Ppu
+	apu       apu.Apu
+	timer     timer.Timer
+	joypad    joypad.Joypad
 }
 
 pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
