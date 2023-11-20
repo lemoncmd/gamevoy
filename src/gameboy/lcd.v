@@ -1,15 +1,18 @@
 module gameboy
 
 import gg
+import sokol.sapp
 
 const cpu_clock_hz = 4_194_304
 
 const m_cycle_clock = 4
 
+const ratio = 4
+
 fn (mut g Gameboy) init_gg() {
 	g.gg = gg.new_context(
-		width: 160
-		height: 144
+		width: 160 * gameboy.ratio
+		height: 144 * gameboy.ratio
 		create_window: true
 		window_title: 'gamevoy'
 		init_fn: fn (mut g Gameboy) {
@@ -22,10 +25,10 @@ fn (mut g Gameboy) init_gg() {
 				gg_ctx.begin()
 			}
 			mut not_rendered := true
-			for _ in 0 .. (gameboy.cpu_clock_hz / gameboy.m_cycle_clock) / 60 {
+			fps := int(0.5 + 1.0 / sapp.frame_duration() / 0.8)
+			for _ in 0 .. (gameboy.cpu_clock_hz / gameboy.m_cycle_clock) / fps {
 				if g.emulate_cycle() {
 					not_rendered = false
-					break
 				}
 			}
 			if not_rendered {
@@ -39,6 +42,8 @@ fn (mut g Gameboy) init_gg() {
 				gg_ctx.end()
 			}
 		}
+		keydown_fn: on_key_down
+		keyup_fn: on_key_up
 		user_data: &g
 	)
 }

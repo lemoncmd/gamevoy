@@ -1,16 +1,17 @@
 module gameboy
 
-import gg
+import gg { Context }
 import cpu { Cpu }
 import peripherals { Peripherals }
 import peripherals.bootrom { BootRom }
 import peripherals.cartridge { Cartridge }
+import peripherals.joypad { Button }
 
 pub struct Gameboy {
 mut:
 	cpu         Cpu
 	peripherals Peripherals
-	gg          ?&gg.Context
+	gg          ?&Context
 	image_idx   int
 }
 
@@ -43,4 +44,12 @@ fn (mut g Gameboy) emulate_cycle() bool {
 		return true
 	}
 	return false
+}
+
+fn (mut g Gameboy) on_key_down(b Button) {
+	g.peripherals.joypad.button_down(mut g.cpu.interrupts, b)
+}
+
+fn (mut g Gameboy) on_key_up(b Button) {
+	g.peripherals.joypad.button_up(b)
 }

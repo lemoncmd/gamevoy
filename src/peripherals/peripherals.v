@@ -6,6 +6,7 @@ import peripherals.wram { WRam }
 import peripherals.hram { HRam }
 import peripherals.ppu { Ppu }
 import peripherals.timer { Timer }
+import peripherals.joypad { Joypad }
 import cpu.interrupts { Interrupts }
 
 pub struct Peripherals {
@@ -15,8 +16,9 @@ mut:
 	wram      wram.WRam
 	hram      hram.HRam
 pub mut:
-	ppu   ppu.Ppu
-	timer timer.Timer
+	ppu    ppu.Ppu
+	timer  timer.Timer
+	joypad joypad.Joypad
 }
 
 pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
@@ -27,6 +29,7 @@ pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
 		hram: HRam.new()
 		ppu: Ppu.new()
 		timer: Timer.new()
+		joypad: Joypad.new()
 	}
 }
 
@@ -53,6 +56,9 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 		}
 		0xFE00...0xFE9F {
 			p.ppu.read(addr)
+		}
+		0xFF00 {
+			p.joypad.read()
 		}
 		0xFF04...0xFF07 {
 			p.timer.read(addr)
@@ -96,6 +102,9 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		}
 		0xFE00...0xFE9F {
 			p.ppu.write(addr, val)
+		}
+		0xFF00 {
+			p.joypad.write(addr, val)
 		}
 		0xFF04...0xFF07 {
 			p.timer.write(addr, val)
