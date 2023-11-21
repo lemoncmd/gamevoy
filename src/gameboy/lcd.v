@@ -55,16 +55,8 @@ fn (mut g Gameboy) init_gg() {
 
 fn (mut g Gameboy) draw_lcd(pixels []u8) {
 	if mut gg_ctx := g.gg {
-		/*
-		for x in 0..160 {
-			for y in 0..144 {
-				print(pixels[x+y*160]/64)
-			}
-			println('')
-		}*/
-		rgba_pixels := []u8{len: 160 * 144 * 4, init: pixels[index / 4]}
 		mut istream_image := gg_ctx.get_cached_image_by_idx(g.image_idx)
-		istream_image.update_pixel_data(&rgba_pixels[0])
+		istream_image.update_pixel_data(&pixels[0])
 		size := gg.window_size()
 		gg_ctx.draw_image(0, 0, size.width, size.height, istream_image)
 	}

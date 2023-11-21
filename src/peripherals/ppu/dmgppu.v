@@ -399,5 +399,5 @@ pub fn (mut p DmgPpu) emulate_cycle(mut ints Interrupts) bool {
 }
 
 pub fn (p &DmgPpu) pixel_buffer() []u8 {
-	return []u8{len: lcd_width * lcd_height, init: p.buffer[index]}
+	return []u8{len: lcd_width * lcd_height * 4, init: p.buffer[index >> 2]}
 }

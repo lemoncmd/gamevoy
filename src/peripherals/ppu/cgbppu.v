@@ -19,11 +19,11 @@ struct CgbSprite {
 	y        u8
 	x        u8
 	tile_idx u8
-	flags    CgbSpriteFlag
+	flags    CgbFlag
 }
 
 @[flag]
-enum CgbSpriteFlag as u8 {
+enum CgbFlag as u8 {
 	palette0
 	palette1
 	palette2
@@ -34,27 +34,59 @@ enum CgbSpriteFlag as u8 {
 	obj2bg_priority
 }
 
+struct Color {
+mut:
+	red   u8
+	green u8
+	blue  u8
+}
+
+fn (c Color) read(index u8) u8 {
+	return if index & 1 == 0 {
+		c.red | c.green << 5
+	} else {
+		c.green >> 3 | c.blue << 2
+	}
+}
+
+fn (mut c Color) write(index u16, val u8) {
+	if index & 1 == 0 {
+		c.red = val & 0b11111
+		c.green &= 0b11000
+		c.green |= val >> 5
+	} else {
+		c.green &= 0b00111
+		c.green |= (val & 0b11) << 3
+		c.blue = (val >> 2) & 0b11111
+	}
+}
+
 pub struct CgbPpu {
 mut:
-	lcdc      CgbLcdc
-	stat      Stat = .always_1
-	scy       u8
-	scx       u8
-	ly        u8
-	lyc       u8
-	bgp       u8
-	obp0      u8
-	obp1      u8
-	wy        u8
-	wx        u8
-	wly       u8
-	cycles    u8 = 20
-	vram_bank bool
-	vram      [0x4000]u8
-	oam       [0xA0]u8
-	buffer    [23040]u8
+	lcdc       CgbLcdc
+	stat       Stat = .always_1
+	scy        u8
+	scx        u8
+	ly         u8
+	lyc        u8
+	bgpi       u8
+	obpi       u8
+	bgp        [8][4]Color
+	obp        [8][4]Color
+	wy         u8
+	wx         u8
+	wly        u8
+	cycles     u8 = 20
+	vram_bank  bool
+	priority   bool
+	dma_target u16
+	vram       [0x4000]u8
+	oam        [0xA0]u8
+	buffer     [92160]u8
 pub mut:
-	oam_dma ?u16
+	oam_dma    ?u16
+	dma_source u16
+	hdma       u8
 }
 
 pub fn CgbPpu.new() CgbPpu {
@@ -101,15 +133,6 @@ pub fn (p &CgbPpu) read(addr u16) u8 {
 		0xFF45 {
 			p.lyc
 		}
-		0xFF47 {
-			p.bgp
-		}
-		0xFF48 {
-			p.obp0
-		}
-		0xFF49 {
-			p.obp1
-		}
 		0xFF4A {
 			p.wy
 		}
@@ -118,6 +141,18 @@ pub fn (p &CgbPpu) read(addr u16) u8 {
 		}
 		0xFF4F {
 			u8(p.vram_bank) | 0b1111_1110
+		}
+		0xFF68 {
+			p.bgpi
+		}
+		0xFF69 {
+			p.bgp[(p.bgpi >> 3) & 0b111][(p.bgpi >> 1) & 0b11].read(p.bgpi)
+		}
+		0xFF6A {
+			p.obpi
+		}
+		0xFF6B {
+			p.obp[(p.obpi >> 3) & 0b111][(p.obpi >> 1) & 0b11].read(p.obpi)
 		}
 		else {
 			panic('unexpected address for ppu: ${addr:04x}')
@@ -167,15 +202,6 @@ pub fn (mut p CgbPpu) write(addr u16, val u8) {
 		0xFF46 {
 			p.oam_dma = u16(val) << 8
 		}
-		0xFF47 {
-			p.bgp = val
-		}
-		0xFF48 {
-			p.obp0 = val
-		}
-		0xFF49 {
-			p.obp1 = val
-		}
 		0xFF4A {
 			p.wy = val
 		}
@@ -185,18 +211,39 @@ pub fn (mut p CgbPpu) write(addr u16, val u8) {
 		0xFF4F {
 			p.vram_bank = val & 1 > 0
 		}
+		0xFF68 {
+			p.bgpi = val
+		}
+		0xFF69 {
+			p.bgp[(p.bgpi >> 3) & 0b111][(p.bgpi >> 1) & 0b11].write(p.bgpi, val)
+			if p.bgpi & 0x80 > 0 {
+				p.bgpi = 0x80 | ((p.bgpi + 1) & 0x3F)
+			}
+		}
+		0xFF6A {
+			p.obpi = val
+		}
+		0xFF6B {
+			p.obp[(p.obpi >> 3) & 0b111][(p.obpi >> 1) & 0b11].write(p.obpi, val)
+			if p.obpi & 0x80 > 0 {
+				p.obpi = 0x80 | ((p.obpi + 1) & 0x3F)
+			}
+		}
+		0xFF6C {
+			p.priority = val & 1 > 0
+		}
 		else {
 			panic('unexpected address for ppu: 0x${addr:04x}')
 		}
 	}
 }
 
-fn (p &CgbPpu) get_pixel_from_tile(tile_idx u16, row u8, col u8) u8 {
+fn (p &CgbPpu) get_pixel_from_tile(vram_bank bool, tile_idx u16, row u8, col u8) u8 {
 	r := u16(row * 2)
 	c := u16(7 - col)
 	tile_addr := tile_idx << 4
-	low := p.vram[(tile_addr | r) & 0x1FFF]
-	high := p.vram[(tile_addr | (r + 1)) & 0x1FFF]
+	low := p.vram[(u16(vram_bank) << 13) | ((tile_addr | r) & 0x1FFF)]
+	high := p.vram[(u16(vram_bank) << 13) | ((tile_addr | (r + 1)) & 0x1FFF)]
 	return (((high >> c) & 1) << 1) | ((low >> c) & 1)
 }
 
@@ -210,26 +257,47 @@ fn (p &CgbPpu) get_tile_idx_from_tile_map(tile_map bool, row u8, col u8) u16 {
 	}
 }
 
-fn (mut p CgbPpu) render_bg(mut bg_prio [160]bool) {
+fn (p &CgbPpu) get_map_attribute(tile_map bool, row u8, col u8) CgbFlag {
+	start_addr := 0x3800 | (u16(tile_map) << 10)
+	ret := p.vram[start_addr | ((u16(row) << 5) + u16(col))]
+	return unsafe { CgbFlag(ret) }
+}
+
+fn (mut p CgbPpu) render_bg(mut bg_prio [160]bool, mut can_overwrite [160]bool) {
 	y := p.ly + p.scy
 	for i in 0 .. lcd_width {
 		x := i + p.scx
 
+		map_attribute := p.get_map_attribute(p.lcdc.has(.bg_tile_map), y >> 3, x >> 3)
+
 		tile_idx := p.get_tile_idx_from_tile_map(p.lcdc.has(.bg_tile_map), y >> 3, x >> 3)
 
-		pixel := p.get_pixel_from_tile(tile_idx, y & 7, x & 7)
-
-		p.buffer[lcd_width * int(p.ly) + i] = match (p.bgp >> (pixel << 1)) & 0b11 {
-			0b00 { 0xFF }
-			0b01 { 0xAA }
-			0b10 { 0x55 }
-			else { 0x00 }
+		x_flipped := if map_attribute.has(.x_flip) {
+			7 - (x & 7)
+		} else {
+			x & 7
 		}
-		bg_prio[i] = pixel != 0
+		y_flipped := if map_attribute.has(.y_flip) {
+			7 - (y & 7)
+		} else {
+			y & 7
+		}
+
+		pixel := p.get_pixel_from_tile(map_attribute.has(.vram_bank), tile_idx, y_flipped,
+			x_flipped)
+
+		palette := p.bgp[u8(map_attribute) & 0b111]
+
+		p.buffer[(lcd_width * int(p.ly) + i) * 4] = palette[pixel].red << 3
+		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = palette[pixel].green << 3
+		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = palette[pixel].blue << 3
+		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
+		bg_prio[i] = map_attribute.has(.obj2bg_priority)
+		can_overwrite[i] = pixel == 0
 	}
 }
 
-fn (mut p CgbPpu) render_window(mut bg_prio [160]bool) {
+fn (mut p CgbPpu) render_window(mut bg_prio [160]bool, mut can_overwrite [160]bool) {
 	if !p.lcdc.has(.window_enable) || p.wy > p.ly {
 		return
 	}
@@ -242,23 +310,38 @@ fn (mut p CgbPpu) render_window(mut bg_prio [160]bool) {
 		}
 		wly_add = 1
 
+		map_attribute := p.get_map_attribute(p.lcdc.has(.window_tile_map), y >> 3, x >> 3)
+
 		tile_idx := p.get_tile_idx_from_tile_map(p.lcdc.has(.window_tile_map), y >> 3,
 			x >> 3)
 
-		pixel := p.get_pixel_from_tile(tile_idx, y & 7, x & 7)
-
-		p.buffer[lcd_width * int(p.ly) + i] = match (p.bgp >> (pixel << 1)) & 0b11 {
-			0b00 { 0xFF }
-			0b01 { 0xAA }
-			0b10 { 0x55 }
-			else { 0x00 }
+		x_flipped := if map_attribute.has(.x_flip) {
+			7 - (x & 7)
+		} else {
+			x & 7
 		}
-		bg_prio[i] = pixel != 0
+		y_flipped := if map_attribute.has(.y_flip) {
+			7 - (y & 7)
+		} else {
+			y & 7
+		}
+
+		pixel := p.get_pixel_from_tile(map_attribute.has(.vram_bank), tile_idx, y_flipped,
+			x_flipped)
+
+		palette := p.bgp[u8(map_attribute) & 0b111]
+
+		p.buffer[(lcd_width * int(p.ly) + i) * 4] = palette[pixel].red << 3
+		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = palette[pixel].green << 3
+		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = palette[pixel].blue << 3
+		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
+		bg_prio[i] = map_attribute.has(.obj2bg_priority)
+		can_overwrite[i] = pixel == 0
 	}
 	p.wly += wly_add
 }
 
-fn (mut p CgbPpu) render_sprite(bg_prio [160]bool) {
+fn (mut p CgbPpu) render_sprite(bg_prio [160]bool, can_overwrite [160]bool) {
 	if !p.lcdc.has(.sprite_enable) {
 		return
 	}
@@ -268,17 +351,21 @@ fn (mut p CgbPpu) render_sprite(bg_prio [160]bool) {
 		y: p.oam[index * 4]
 		x: p.oam[index * 4 + 1]
 		tile_idx: p.oam[index * 4 + 2]
-		flags: unsafe { CgbSpriteFlag(p.oam[index * 4 + 3]) }
+		flags: unsafe { CgbFlag(p.oam[index * 4 + 3]) }
 	}}.map(|it| CgbSprite{
 		...it
 		y: it.y - 16
 		x: it.x - 8
 	}).filter(p.ly - it.y < size)
 	sprites.trim(10)
-	sprites.sort(b.x < a.x)
+	if p.priority {
+		sprites.sort(b.x < a.x)
+	} else {
+		sprites.reverse_in_place()
+	}
 
 	for sprite in sprites {
-		palette := if sprite.flags.has(.palette0) { p.obp1 } else { p.obp0 }
+		palette := p.obp[u8(sprite.flags) & 0b111]
 		mut tile_idx := u16(sprite.tile_idx)
 		mut row := u8(if sprite.flags.has(.y_flip) {
 			size - 1 - (p.ly - sprite.y)
@@ -297,16 +384,25 @@ fn (mut p CgbPpu) render_sprite(bg_prio [160]bool) {
 			} else {
 				col
 			})
-			pixel := p.get_pixel_from_tile(tile_idx, row, col_flipped)
+			pixel := p.get_pixel_from_tile(sprite.flags.has(.vram_bank), tile_idx, row,
+				col_flipped)
 			i := int(sprite.x + col)
 			if i < lcd_width && pixel > 0 {
-				if !sprite.flags.has(.obj2bg_priority) || !bg_prio[i] {
-					p.buffer[lcd_width * int(p.ly) + i] = match (palette >> (pixel << 1)) & 0b11 {
-						0b00 { 0xFF }
-						0b01 { 0xAA }
-						0b10 { 0x55 }
-						else { 0x00 }
+				if !p.lcdc.has(.bg_window_master_priority)
+					|| (!sprite.flags.has(.obj2bg_priority) && !bg_prio[i]) {
+					if pixel != 0 {
+						color := palette[pixel]
+						p.buffer[(lcd_width * int(p.ly) + i) * 4] = color.red << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = color.green << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = color.blue << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
 					}
+				} else if can_overwrite[i] {
+					color := palette[pixel]
+					p.buffer[(lcd_width * int(p.ly) + i) * 4] = color.red << 3
+					p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = color.green << 3
+					p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = color.blue << 3
+					p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
 				}
 			}
 		}
@@ -389,9 +485,10 @@ pub fn (mut p CgbPpu) emulate_cycle(mut ints Interrupts) bool {
 		}
 		.drawing {
 			mut bg_prio := [160]bool{}
-			p.render_bg(mut bg_prio)
-			p.render_window(mut bg_prio)
-			p.render_sprite(bg_prio)
+			mut can_overwrite := [160]bool{}
+			p.render_bg(mut bg_prio, mut can_overwrite)
+			p.render_window(mut bg_prio, mut can_overwrite)
+			p.render_sprite(bg_prio, can_overwrite)
 			p.stat.set_mode(.hblank)
 			p.cycles = 51
 			if p.stat.has(.hblank_int) {
@@ -403,5 +500,5 @@ pub fn (mut p CgbPpu) emulate_cycle(mut ints Interrupts) bool {
 }
 
 pub fn (p &CgbPpu) pixel_buffer() []u8 {
-	return []u8{len: lcd_width * lcd_height, init: p.buffer[index]}
+	return []u8{len: lcd_width * lcd_height * 4, init: p.buffer[index]}
 }
