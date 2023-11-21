@@ -127,6 +127,11 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		0xFF50 {
 			p.bootrom.write(addr, val)
 		}
+		0xFF70 {
+			if p.cartridge.cgb_flag {
+				p.wram.write(addr, val)
+			}
+		}
 		0xFF80...0xFFFE {
 			p.hram.write(addr, val)
 		}

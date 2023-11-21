@@ -8,6 +8,8 @@ pub struct Cartridge {
 mut:
 	ram []u8
 	mbc mbc.Mbc
+pub:
+	cgb_flag bool
 }
 
 pub fn Cartridge.new(rom []u8) Cartridge {
@@ -28,6 +30,7 @@ pub fn Cartridge.new(rom []u8) Cartridge {
 		ram: []u8{len: sram_size}
 		mbc: m
 		savable: header.is_savable()
+		cgb_flag: header.cgb_flag & 0x80 > 0
 	}
 }
 
