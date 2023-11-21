@@ -21,7 +21,17 @@ mut:
 	sram_enable  bool
 }
 
-pub type Mbc = Mbc1 | Mbc3 | NoMbc
+struct Mbc30 {
+mut:
+	low_bank     u8 = 0b00001
+	high_bank    u8
+	has_rtc      bool
+	will_latched bool
+	rom_banks    int
+	sram_enable  bool
+}
+
+pub type Mbc = Mbc1 | Mbc3 | Mbc30 | NoMbc
 
 pub fn Mbc.new(cartridge_type u8, rom_banks int) Mbc {
 	return match cartridge_type {
@@ -34,9 +44,16 @@ pub fn Mbc.new(cartridge_type u8, rom_banks int) Mbc {
 			}
 		}
 		0x0F...0x13 {
-			Mbc3{
-				rom_banks: rom_banks
-				has_rtc: cartridge_type <= 0x10
+			if rom_banks == 128 {
+				Mbc30{
+					rom_banks: rom_banks
+					has_rtc: cartridge_type <= 0x10
+				}
+			} else {
+				Mbc3{
+					rom_banks: rom_banks
+					has_rtc: cartridge_type <= 0x10
+				}
 			}
 		}
 		else {
@@ -105,6 +122,40 @@ pub fn (mut m Mbc) write(addr u16, val u8) {
 				}
 			}
 		}
+		Mbc30 {
+			match addr {
+				0x0000...0x1FFF {
+					if val == 0x0A {
+						m.sram_enable = true
+					}
+					if val == 0x00 {
+						m.sram_enable = false
+					}
+				}
+				0x2000...0x3FFF {
+					m.low_bank = if val != 0 {
+						val
+					} else {
+						1
+					}
+				}
+				0x4000...0x5FFF {
+					if val < 8 {
+						m.high_bank = val
+					} else if m.has_rtc && 0x8 <= val && val <= 0xC {
+						m.high_bank = val
+					}
+				}
+				0x6000...0x7FFF {
+					if m.will_latched && val == 1 {
+					}
+					m.will_latched = val == 0
+				}
+				else {
+					panic('unexpected address for mbc: 0x${addr:04X}')
+				}
+			}
+		}
 	}
 }
 
@@ -137,7 +188,7 @@ pub fn (m &Mbc) get_addr(addr u16) int {
 				}
 			}
 		}
-		Mbc3 {
+		Mbc3, Mbc30 {
 			match addr {
 				0x0000...0x3FFF {
 					int(addr & 0x3FFF)
@@ -163,13 +214,13 @@ pub fn (m &Mbc) get_addr(addr u16) int {
 pub fn (m &Mbc) sram_enable() bool {
 	return match m {
 		NoMbc { true }
-		Mbc1, Mbc3 { m.sram_enable }
+		Mbc1, Mbc3, Mbc30 { m.sram_enable }
 	}
 }
 
 pub fn (m &Mbc) rtc_enable() bool {
 	return match m {
-		Mbc3 { m.has_rtc && m.sram_enable && (0x8 <= m.high_bank && m.high_bank <= 0xC) }
+		Mbc3, Mbc30 { m.has_rtc && m.sram_enable && (0x8 <= m.high_bank && m.high_bank <= 0xC) }
 		else { false }
 	}
 }
@@ -179,5 +230,6 @@ pub fn (m &Mbc) str() string {
 		NoMbc { 'NO MBC' }
 		Mbc1 { 'MBC1' }
 		Mbc3 { 'MBC3' }
+		Mbc30 { 'MBC30' }
 	}
 }
