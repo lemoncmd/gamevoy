@@ -425,15 +425,8 @@ fn (mut p CgbPpu) render_sprite(bg_prio [160]bool, can_overwrite [160]bool) {
 			i := int(sprite.x + col)
 			if i < lcd_width && pixel > 0 {
 				if !p.lcdc.has(.bg_window_master_priority)
-					|| (!sprite.flags.has(.obj2bg_priority) && !bg_prio[i]) {
-					if pixel != 0 {
-						color := palette[pixel]
-						p.buffer[(lcd_width * int(p.ly) + i) * 4] = color.red << 3
-						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = color.green << 3
-						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = color.blue << 3
-						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
-					}
-				} else if can_overwrite[i] {
+					|| (!sprite.flags.has(.obj2bg_priority) && !bg_prio[i])
+					|| can_overwrite[i] {
 					color := palette[pixel]
 					p.buffer[(lcd_width * int(p.ly) + i) * 4] = color.red << 3
 					p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = color.green << 3
