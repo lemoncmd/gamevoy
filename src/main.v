@@ -12,8 +12,9 @@ fn main() {
 	b := bootrom.BootRom.new(bootrom_data)
 
 	cartridge_file_name := os.args[2] or { panic('please insert cartridge file name') }
-	assert cartridge_file_name.ends_with('.gb'), 'file extention must be .gb'
-	save_file_name := cartridge_file_name.reverse().replace('bg.', 'vas.').reverse()
+	assert cartridge_file_name.ends_with('.gb') || cartridge_file_name.ends_with('.gbc'), 'file extention must be .gb or .gbc'
+	save_file_name := cartridge_file_name.reverse().replace('cbg.', 'vas.').replace('bg.',
+		'vas.').reverse()
 
 	cartridge_data := os.read_bytes(cartridge_file_name)!
 	c := cartridge.Cartridge.new(cartridge_data)
