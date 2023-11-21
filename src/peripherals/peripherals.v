@@ -4,7 +4,7 @@ import peripherals.bootrom { BootRom }
 import peripherals.cartridge { Cartridge }
 import peripherals.wram { WRam }
 import peripherals.hram { HRam }
-import peripherals.ppu { Ppu }
+import peripherals.ppu { CgbPpu, DmgPpu, Ppu }
 import peripherals.apu { Apu }
 import peripherals.timer { Timer }
 import peripherals.joypad { Joypad }
@@ -29,7 +29,11 @@ pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
 		cartridge: cg
 		wram: WRam.new()
 		hram: HRam.new()
-		ppu: Ppu.new()
+		ppu: if cg.cgb_flag {
+			ppu.Ppu(CgbPpu.new())
+		} else {
+			ppu.Ppu(DmgPpu.new())
+		}
 		apu: Apu.new()
 		timer: Timer.new()
 		joypad: Joypad.new()
