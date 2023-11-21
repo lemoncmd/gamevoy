@@ -79,6 +79,13 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 		0xFF40...0xFF4B {
 			p.ppu.read(addr)
 		}
+		0xFF4F {
+			if p.cartridge.cgb_flag {
+				p.ppu.read(addr)
+			} else {
+				0xFF
+			}
+		}
 		0xFF80...0xFFFE {
 			p.hram.read(addr)
 		}
@@ -127,6 +134,11 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		}
 		0xFF40...0xFF4B {
 			p.ppu.write(addr, val)
+		}
+		0xFF4F {
+			if p.cartridge.cgb_flag {
+				p.ppu.write(addr, val)
+			}
 		}
 		0xFF50 {
 			p.bootrom.write(addr, val)
