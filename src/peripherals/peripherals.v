@@ -53,7 +53,7 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 			p.cartridge.read(addr)
 		}
 		0x0200...0x08FF {
-			if p.bootrom.is_active() && p.cartridge.cgb_flag {
+			if p.bootrom.is_active() {
 				p.bootrom.read(addr)
 			} else {
 				p.cartridge.read(addr)
@@ -86,15 +86,8 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 		0xFF10...0xFF26, 0xFF30...0xFF3F {
 			p.apu.read(addr)
 		}
-		0xFF40...0xFF45, 0xFF4A, 0xFF4B {
+		0xFF40...0xFF45, 0xFF47...0xFF49, 0xFF4A, 0xFF4B {
 			p.ppu.read(addr)
-		}
-		0xFF47...0xFF49 {
-			if !p.cartridge.cgb_flag {
-				p.ppu.read(addr)
-			} else {
-				0xFF
-			}
 		}
 		0xFF4F, 0xFF55, 0xFF68...0xFF6B {
 			if p.cartridge.cgb_flag {
@@ -157,13 +150,8 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		0xFF10...0xFF26, 0xFF30...0xFF3F {
 			p.apu.write(addr, val)
 		}
-		0xFF40...0xFF46, 0xFF4A, 0xFF4B {
+		0xFF40...0xFF49, 0xFF4A, 0xFF4B {
 			p.ppu.write(addr, val)
-		}
-		0xFF47...0xFF49 {
-			if !p.cartridge.cgb_flag {
-				p.ppu.write(addr, val)
-			}
 		}
 		0xFF4F {
 			if p.cartridge.cgb_flag {

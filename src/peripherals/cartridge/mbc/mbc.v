@@ -31,7 +31,15 @@ mut:
 	sram_enable  bool
 }
 
-pub type Mbc = Mbc1 | Mbc3 | Mbc30 | NoMbc
+struct Mbc5 {
+mut:
+	low_bank    u16 = 0b00001
+	high_bank   u8
+	rom_banks   int
+	sram_enable bool
+}
+
+pub type Mbc = Mbc1 | Mbc3 | Mbc30 | Mbc5 | NoMbc
 
 pub fn Mbc.new(cartridge_type u8, rom_banks int) Mbc {
 	return match cartridge_type {
@@ -54,6 +62,11 @@ pub fn Mbc.new(cartridge_type u8, rom_banks int) Mbc {
 					rom_banks: rom_banks
 					has_rtc: cartridge_type <= 0x10
 				}
+			}
+		}
+		0x19...0x1E {
+			Mbc5{
+				rom_banks: rom_banks
 			}
 		}
 		else {
@@ -156,6 +169,25 @@ pub fn (mut m Mbc) write(addr u16, val u8) {
 				}
 			}
 		}
+		Mbc5 {
+			match addr {
+				0x0000...0x1FFF {
+					m.sram_enable = val & 0xF == 0xA
+				}
+				0x2000...0x2FFF {
+					m.low_bank = (m.low_bank & 0x100) | u16(val)
+				}
+				0x3000...0x3FFF {
+					m.low_bank = (m.low_bank & 0x0FF) | (u16(val) << 8)
+				}
+				0x4000...0x5FFF {
+					m.high_bank = val & 0xF
+				}
+				else {
+					panic('unexpected address for mbc: 0x${addr:04X}')
+				}
+			}
+		}
 	}
 }
 
@@ -208,13 +240,29 @@ pub fn (m &Mbc) get_addr(addr u16) int {
 				}
 			}
 		}
+		Mbc5 {
+			match addr {
+				0x0000...0x3FFF {
+					int(addr & 0x3FFF)
+				}
+				0x4000...0x7FFF {
+					((u32(m.low_bank) & u32(m.rom_banks - 1)) << 14) | u32(addr & 0x3FFF)
+				}
+				0xA000...0xBFFF {
+					(int(m.high_bank) << 13) | (addr & 0x1FFF)
+				}
+				else {
+					panic('unexpected address for cartridge: 0x${addr:04X}')
+				}
+			}
+		}
 	}
 }
 
 pub fn (m &Mbc) sram_enable() bool {
 	return match m {
 		NoMbc { true }
-		Mbc1, Mbc3, Mbc30 { m.sram_enable }
+		Mbc1, Mbc3, Mbc30, Mbc5 { m.sram_enable }
 	}
 }
 
@@ -231,5 +279,6 @@ pub fn (m &Mbc) str() string {
 		Mbc1 { 'MBC1' }
 		Mbc3 { 'MBC3' }
 		Mbc30 { 'MBC30' }
+		Mbc5 { 'MBC5' }
 	}
 }

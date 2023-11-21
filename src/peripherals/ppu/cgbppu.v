@@ -73,6 +73,9 @@ mut:
 	obpi       u8
 	bgp        [8][4]Color
 	obp        [8][4]Color
+	old_bgp    u8
+	old_obp0   u8
+	old_obp1   u8
 	wy         u8
 	wx         u8
 	wly        u8
@@ -132,6 +135,15 @@ pub fn (p &CgbPpu) read(addr u16) u8 {
 		}
 		0xFF45 {
 			p.lyc
+		}
+		0xFF47 {
+			p.old_bgp
+		}
+		0xFF48 {
+			p.old_obp0
+		}
+		0xFF49 {
+			p.old_obp1
 		}
 		0xFF4A {
 			p.wy
@@ -208,6 +220,15 @@ pub fn (mut p CgbPpu) write(addr u16, val u8) {
 		}
 		0xFF46 {
 			p.oam_dma = u16(val) << 8
+		}
+		0xFF47 {
+			p.old_bgp = val
+		}
+		0xFF48 {
+			p.old_obp0 = val
+		}
+		0xFF49 {
+			p.old_obp1 = val
 		}
 		0xFF4A {
 			p.wy = val
