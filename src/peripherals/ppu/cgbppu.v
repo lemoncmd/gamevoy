@@ -86,7 +86,7 @@ mut:
 pub mut:
 	oam_dma    ?u16
 	dma_source u16
-	hdma       u8
+	hdma       ?u8
 }
 
 pub fn CgbPpu.new() CgbPpu {
@@ -141,6 +141,13 @@ pub fn (p &CgbPpu) read(addr u16) u8 {
 		}
 		0xFF4F {
 			u8(p.vram_bank) | 0b1111_1110
+		}
+		0xFF55 {
+			if hdma := p.hdma {
+				hdma & 0x7F
+			} else {
+				0xFF
+			}
 		}
 		0xFF68 {
 			p.bgpi
@@ -210,6 +217,35 @@ pub fn (mut p CgbPpu) write(addr u16, val u8) {
 		}
 		0xFF4F {
 			p.vram_bank = val & 1 > 0
+		}
+		0xFF51 {
+			p.dma_source &= 0x00FF
+			p.dma_source |= u16(val) << 8
+		}
+		0xFF52 {
+			p.dma_source &= 0xFF00
+			p.dma_source |= u16(val) & 0xF0
+		}
+		0xFF53 {
+			p.dma_target &= 0x00FF
+			p.dma_target |= (u16(val) << 8) & 0x1F00
+			p.dma_target |= 0x8000
+		}
+		0xFF54 {
+			p.dma_target &= 0xFF00
+			p.dma_target |= u16(val) & 0xF0
+		}
+		0xFF55 {
+			if hdma := p.hdma {
+				if hdma & 0x80 > 0 && val & 0x80 == 0 {
+					// TODO halted hdma transfer must return length
+					p.hdma = none
+				} else {
+					p.hdma = val
+				}
+			} else {
+				p.hdma = val
+			}
 		}
 		0xFF68 {
 			p.bgpi = val
@@ -430,6 +466,31 @@ pub fn (mut p CgbPpu) oam_dma_emulate_cycle(val u8) {
 		} else {
 			none
 		}
+	}
+}
+
+pub fn (mut p CgbPpu) hdma_emulate_cycle(val u8) bool {
+	mut hdma := p.hdma or { return false }
+	if hdma & 0x80 > 0 {
+		hdma &= 0x7F
+		if p.stat.get_mode() == .hblank && p.cycles >= 36 {
+			p.write(p.dma_target, val)
+			p.dma_target++
+			p.dma_source++
+			if p.dma_source & 0xF == 0 {
+				p.hdma = if hdma != 0 { 0x80 | (hdma - 1) } else { none }
+			}
+			return true
+		}
+		return false
+	} else {
+		p.write(p.dma_target, val)
+		p.dma_target++
+		p.dma_source++
+		if p.dma_source & 0xF == 0 {
+			p.hdma = if hdma != 0 { hdma - 1 } else { none }
+		}
+		return true
 	}
 }
 

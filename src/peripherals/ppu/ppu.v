@@ -57,11 +57,14 @@ fn (mut s Stat) set_mode(m Mode) {
 }
 
 pub interface Ppu {
+	dma_source u16
 	read(addr u16) u8
 	pixel_buffer() []u8
 mut:
 	oam_dma ?u16
+	hdma    ?u8
 	write(addr u16, val u8)
 	oam_dma_emulate_cycle(val u8)
+	hdma_emulate_cycle(val u8) bool
 	emulate_cycle(mut ints Interrupts) bool
 }

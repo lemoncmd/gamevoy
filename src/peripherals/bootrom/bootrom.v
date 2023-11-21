@@ -1,14 +1,12 @@
 module bootrom
 
-const size = 0x100
-
 pub struct BootRom {
-	rom [size]u8
+	rom []u8
 mut:
 	active bool
 }
 
-pub fn BootRom.new(rom [size]u8) BootRom {
+pub fn BootRom.new(rom []u8) BootRom {
 	return BootRom{rom, true}
 }
 

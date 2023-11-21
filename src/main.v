@@ -8,8 +8,7 @@ import gameboy
 fn main() {
 	bootrom_file_name := os.args[1] or { panic('please insert bootrom file name') }
 	bootrom_file := os.read_bytes(bootrom_file_name)!
-	bootrom_data := [0x100]u8{init: bootrom_file[index]}
-	b := bootrom.BootRom.new(bootrom_data)
+	b := bootrom.BootRom.new(bootrom_file)
 
 	cartridge_file_name := os.args[2] or { panic('please insert cartridge file name') }
 	assert cartridge_file_name.ends_with('.gb') || cartridge_file_name.ends_with('.gbc'), 'file extention must be .gb or .gbc'

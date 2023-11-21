@@ -52,8 +52,11 @@ mut:
 	vram   [0x2000]u8
 	oam    [0xA0]u8
 	buffer [23040]u8
+pub:
+	dma_source u16
 pub mut:
 	oam_dma ?u16
+	hdma    ?u8
 }
 
 pub fn DmgPpu.new() DmgPpu {
@@ -331,6 +334,10 @@ pub fn (mut p DmgPpu) oam_dma_emulate_cycle(val u8) {
 			none
 		}
 	}
+}
+
+pub fn (mut p DmgPpu) hdma_emulate_cycle(_ u8) bool {
+	return false
 }
 
 pub fn (mut p DmgPpu) emulate_cycle(mut ints Interrupts) bool {
