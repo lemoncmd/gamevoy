@@ -9,7 +9,8 @@ mut:
 	ram []u8
 	mbc mbc.Mbc
 pub:
-	cgb_flag bool
+	cgb_flag      bool
+	real_cgb_flag bool
 }
 
 pub fn Cartridge.new(rom []u8) Cartridge {
@@ -31,6 +32,7 @@ pub fn Cartridge.new(rom []u8) Cartridge {
 		mbc: m
 		savable: header.is_savable()
 		cgb_flag: true // header.cgb_flag & 0x80 > 0
+		real_cgb_flag: header.cgb_flag & 0x80 > 0
 	}
 }
 

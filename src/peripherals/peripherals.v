@@ -30,7 +30,7 @@ pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
 		wram: WRam.new()
 		hram: HRam.new()
 		ppu: if cg.cgb_flag {
-			ppu.Ppu(CgbPpu.new())
+			ppu.Ppu(CgbPpu.new(cg.real_cgb_flag))
 		} else {
 			ppu.Ppu(DmgPpu.new())
 		}

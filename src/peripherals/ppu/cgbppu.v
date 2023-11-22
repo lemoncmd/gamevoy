@@ -28,7 +28,7 @@ enum CgbFlag as u8 {
 	palette1
 	palette2
 	vram_bank
-	unused
+	old_palette
 	x_flip
 	y_flip
 	obj2bg_priority
@@ -63,6 +63,7 @@ fn (mut c Color) write(index u16, val u8) {
 
 pub struct CgbPpu {
 mut:
+	cgb_flag   bool
 	lcdc       CgbLcdc
 	stat       Stat = .always_1
 	scy        u8
@@ -92,8 +93,10 @@ pub mut:
 	hdma       ?u8
 }
 
-pub fn CgbPpu.new() CgbPpu {
-	mut p := CgbPpu{}
+pub fn CgbPpu.new(cgb_flag bool) CgbPpu {
+	mut p := CgbPpu{
+		cgb_flag: cgb_flag
+	}
 	p.stat.set_mode(.oamscan)
 	return p
 }
@@ -321,6 +324,9 @@ fn (p &CgbPpu) get_map_attribute(tile_map bool, row u8, col u8) CgbFlag {
 }
 
 fn (mut p CgbPpu) render_bg(mut bg_prio [160]bool, mut can_overwrite [160]bool) {
+	if !p.cgb_flag && !p.lcdc.has(.bg_window_master_priority) {
+		return
+	}
 	y := p.ly + p.scy
 	for i in 0 .. lcd_width {
 		x := i + p.scx
@@ -349,8 +355,12 @@ fn (mut p CgbPpu) render_bg(mut bg_prio [160]bool, mut can_overwrite [160]bool) 
 		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = palette[pixel].green << 3
 		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = palette[pixel].blue << 3
 		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
-		bg_prio[i] = map_attribute.has(.obj2bg_priority)
-		can_overwrite[i] = pixel == 0
+		if p.cgb_flag {
+			bg_prio[i] = map_attribute.has(.obj2bg_priority)
+			can_overwrite[i] = pixel == 0
+		} else {
+			bg_prio[i] = pixel != 0
+		}
 	}
 }
 
@@ -392,8 +402,12 @@ fn (mut p CgbPpu) render_window(mut bg_prio [160]bool, mut can_overwrite [160]bo
 		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = palette[pixel].green << 3
 		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = palette[pixel].blue << 3
 		p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
-		bg_prio[i] = map_attribute.has(.obj2bg_priority)
-		can_overwrite[i] = pixel == 0
+		if p.cgb_flag {
+			bg_prio[i] = map_attribute.has(.obj2bg_priority)
+			can_overwrite[i] = pixel == 0
+		} else {
+			bg_prio[i] = pixel != 0
+		}
 	}
 	p.wly += wly_add
 }
@@ -415,14 +429,18 @@ fn (mut p CgbPpu) render_sprite(bg_prio [160]bool, can_overwrite [160]bool) {
 		x: it.x - 8
 	}).filter(p.ly - it.y < size)
 	sprites.trim(10)
-	if p.priority {
+	if p.priority || !p.cgb_flag {
 		sprites.sort(b.x < a.x)
 	} else {
 		sprites.reverse_in_place()
 	}
 
 	for sprite in sprites {
-		palette := p.obp[u8(sprite.flags) & 0b111]
+		palette := p.obp[if p.cgb_flag {
+			u8(sprite.flags) & 0b111
+		} else {
+			u8(sprite.flags.has(.old_palette))
+		}]
 		mut tile_idx := u16(sprite.tile_idx)
 		mut row := u8(if sprite.flags.has(.y_flip) {
 			size - 1 - (p.ly - sprite.y)
@@ -445,14 +463,29 @@ fn (mut p CgbPpu) render_sprite(bg_prio [160]bool, can_overwrite [160]bool) {
 				col_flipped)
 			i := int(sprite.x + col)
 			if i < lcd_width && pixel > 0 {
-				if !p.lcdc.has(.bg_window_master_priority)
-					|| (!sprite.flags.has(.obj2bg_priority) && !bg_prio[i])
-					|| can_overwrite[i] {
-					color := palette[pixel]
-					p.buffer[(lcd_width * int(p.ly) + i) * 4] = color.red << 3
-					p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = color.green << 3
-					p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = color.blue << 3
-					p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
+				if p.cgb_flag {
+					if !p.lcdc.has(.bg_window_master_priority)
+						|| (!sprite.flags.has(.obj2bg_priority) && !bg_prio[i])
+						|| can_overwrite[i] {
+						color := palette[pixel]
+						p.buffer[(lcd_width * int(p.ly) + i) * 4] = color.red << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = color.green << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = color.blue << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
+					}
+				} else {
+					if !sprite.flags.has(.obj2bg_priority) || !bg_prio[i] {
+						old_palette := if sprite.flags.has(.old_palette) {
+							p.old_obp1
+						} else {
+							p.old_obp0
+						}
+						color := palette[(old_palette >> (pixel << 1)) & 0b11]
+						p.buffer[(lcd_width * int(p.ly) + i) * 4] = color.red << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 1] = color.green << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 2] = color.blue << 3
+						p.buffer[(lcd_width * int(p.ly) + i) * 4 + 3] = 255
+					}
 				}
 			}
 		}
