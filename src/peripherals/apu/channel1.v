@@ -84,7 +84,7 @@ fn (mut c Channel1) calculate_frequency() u16 {
 			0
 		}
 	} else {
-		math.min(c.shadow_frequency + (c.shadow_frequency >> c.sweep_shift), 0x3FF)
+		math.min(c.shadow_frequency + (c.shadow_frequency >> c.sweep_shift), 0x7FF)
 	}
 	return new_frequency
 }
@@ -144,8 +144,6 @@ fn (mut c Channel1) write_nr1x(x u16, val u8) {
 				c.shadow_frequency = c.frequency
 				c.sweep_timer = c.sweep_period
 				c.sweep_enabled = c.sweep_period > 0 || c.sweep_shift > 0
-				// ?
-				c.frequency = c.calculate_frequency()
 			}
 		}
 		else {}

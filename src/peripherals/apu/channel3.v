@@ -19,8 +19,8 @@ mut:
 
 fn (mut c Channel3) emulate_t_cycle() {
 	if c.frequency_timer == 0 {
-		c.frequency_timer = (2048 - c.frequency) * 4
-		c.wave_duty_position = (c.wave_duty_position + 1) & 7
+		c.frequency_timer = (2048 - c.frequency) * 2
+		c.wave_duty_position = (c.wave_duty_position + 1) & 31
 	}
 	c.frequency_timer--
 }
