@@ -63,7 +63,6 @@ fn (mut c Color) write(index u16, val u8) {
 
 pub struct CgbPpu {
 mut:
-	cgb_flag   bool
 	lcdc       CgbLcdc
 	stat       Stat = .always_1
 	scy        u8
@@ -91,12 +90,11 @@ pub mut:
 	oam_dma    ?u16
 	dma_source u16
 	hdma       ?u8
+	cgb_flag   bool = true
 }
 
-pub fn CgbPpu.new(cgb_flag bool) CgbPpu {
-	mut p := CgbPpu{
-		cgb_flag: cgb_flag
-	}
+pub fn CgbPpu.new() CgbPpu {
+	mut p := CgbPpu{}
 	p.stat.set_mode(.oamscan)
 	return p
 }
@@ -346,8 +344,11 @@ fn (mut p CgbPpu) render_bg(mut bg_prio [160]bool, mut can_overwrite [160]bool) 
 			y & 7
 		}
 
-		pixel := p.get_pixel_from_tile(map_attribute.has(.vram_bank), tile_idx, y_flipped,
+		mut pixel := p.get_pixel_from_tile(map_attribute.has(.vram_bank), tile_idx, y_flipped,
 			x_flipped)
+		if !p.cgb_flag {
+			pixel = (p.old_bgp >> (pixel << 1)) & 0b11
+		}
 
 		palette := p.bgp[u8(map_attribute) & 0b111]
 
@@ -393,8 +394,11 @@ fn (mut p CgbPpu) render_window(mut bg_prio [160]bool, mut can_overwrite [160]bo
 			y & 7
 		}
 
-		pixel := p.get_pixel_from_tile(map_attribute.has(.vram_bank), tile_idx, y_flipped,
+		mut pixel := p.get_pixel_from_tile(map_attribute.has(.vram_bank), tile_idx, y_flipped,
 			x_flipped)
+		if !p.cgb_flag {
+			pixel = (p.old_bgp >> (pixel << 1)) & 0b11
+		}
 
 		palette := p.bgp[u8(map_attribute) & 0b111]
 
@@ -439,7 +443,7 @@ fn (mut p CgbPpu) render_sprite(bg_prio [160]bool, can_overwrite [160]bool) {
 		palette := p.obp[if p.cgb_flag {
 			u8(sprite.flags) & 0b111
 		} else {
-			u8(sprite.flags.has(.old_palette))
+			0
 		}]
 		mut tile_idx := u16(sprite.tile_idx)
 		mut row := u8(if sprite.flags.has(.y_flip) {

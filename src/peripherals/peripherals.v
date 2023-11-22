@@ -30,7 +30,7 @@ pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
 		wram: WRam.new()
 		hram: HRam.new()
 		ppu: if cg.cgb_flag {
-			ppu.Ppu(CgbPpu.new(cg.real_cgb_flag))
+			ppu.Ppu(CgbPpu.new())
 		} else {
 			ppu.Ppu(DmgPpu.new())
 		}
@@ -160,6 +160,10 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		}
 		0xFF50 {
 			p.bootrom.write(addr, val)
+			mut pp := &p.ppu
+			if mut pp is ppu.CgbPpu {
+				pp.cgb_flag = p.cartridge.real_cgb_flag || p.bootrom.is_active()
+			}
 		}
 		0xFF51...0xFF55, 0xFF68...0xFF6C {
 			if p.cartridge.cgb_flag {
