@@ -237,6 +237,9 @@ pub fn (mut p CgbPpu) write(addr u16, val u8) {
 		0xFF4B {
 			p.wx = val
 		}
+		0xFF4C {
+			p.cgb_flag = val & 0x80 > 0
+		}
 		0xFF4F {
 			p.vram_bank = val & 1 > 0
 		}

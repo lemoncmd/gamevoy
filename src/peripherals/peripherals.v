@@ -89,12 +89,18 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 		0xFF40...0xFF45, 0xFF47...0xFF49, 0xFF4A, 0xFF4B {
 			p.ppu.read(addr)
 		}
+		0xFF4D {
+			ins.read(addr)
+		}
 		0xFF4F, 0xFF55, 0xFF68...0xFF6B {
 			if p.cartridge.cgb_flag {
 				p.ppu.read(addr)
 			} else {
 				0xFF
 			}
+		}
+		0xFF70 {
+			p.wram.read(addr)
 		}
 		0xFF80...0xFFFE {
 			p.hram.read(addr)
@@ -103,6 +109,7 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 			ins.read(addr)
 		}
 		else {
+			println('${addr:04X}')
 			0xFF
 		}
 	}
@@ -150,8 +157,11 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		0xFF10...0xFF26, 0xFF30...0xFF3F {
 			p.apu.write(addr, val)
 		}
-		0xFF40...0xFF49, 0xFF4A, 0xFF4B {
+		0xFF40...0xFF49, 0xFF4A...0xFF4C {
 			p.ppu.write(addr, val)
+		}
+		0xFF4D {
+			ins.write(addr, val)
 		}
 		0xFF4F {
 			if p.cartridge.cgb_flag {
@@ -160,10 +170,6 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		}
 		0xFF50 {
 			p.bootrom.write(addr, val)
-			mut pp := &p.ppu
-			if mut pp is ppu.CgbPpu {
-				pp.cgb_flag = p.cartridge.real_cgb_flag || p.bootrom.is_active()
-			}
 		}
 		0xFF51...0xFF55, 0xFF68...0xFF6C {
 			if p.cartridge.cgb_flag {
@@ -181,6 +187,8 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		0xFFFF {
 			ins.write(addr, val)
 		}
-		else {}
+		else {
+			println('${addr:04x} ${val:02x}')
+		}
 	}
 }

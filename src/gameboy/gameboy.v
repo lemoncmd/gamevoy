@@ -39,6 +39,7 @@ pub fn (mut g Gameboy) run() ! {
 }
 
 fn (mut g Gameboy) emulate_cycle() bool {
+	double_mode := g.cpu.interrupts.read(0xFF4D) & 0x80 > 0
 	in_hdma_transfer := if g.peripherals.ppu.hdma != none {
 		g.peripherals.ppu.hdma_emulate_cycle(g.peripherals.read(g.cpu.interrupts, g.peripherals.ppu.dma_source))
 	} else {
@@ -51,6 +52,16 @@ fn (mut g Gameboy) emulate_cycle() bool {
 	g.peripherals.apu.emulate_cycle()
 	if addr := g.peripherals.ppu.oam_dma {
 		g.peripherals.ppu.oam_dma_emulate_cycle(g.peripherals.read(g.cpu.interrupts, addr))
+	}
+	if double_mode {
+		if !in_hdma_transfer {
+			g.cpu.emulate_cycle(mut g.peripherals)
+		}
+		g.peripherals.timer.emulate_cycle(mut g.cpu.interrupts)
+		if addr := g.peripherals.ppu.oam_dma {
+			g.peripherals.ppu.oam_dma_emulate_cycle(g.peripherals.read(g.cpu.interrupts,
+				addr))
+		}
 	}
 	if g.peripherals.ppu.emulate_cycle(mut g.cpu.interrupts) {
 		g.draw_lcd(g.peripherals.ppu.pixel_buffer())
