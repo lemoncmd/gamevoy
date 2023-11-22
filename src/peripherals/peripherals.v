@@ -77,6 +77,9 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 		0xFF00 {
 			p.joypad.read()
 		}
+		0xFF02 {
+			0
+		}
 		0xFF04...0xFF07 {
 			p.timer.read(addr)
 		}
