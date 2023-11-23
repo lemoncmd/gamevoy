@@ -98,6 +98,14 @@ fn (c &Channel1) dac_output() f32 {
 	}
 }
 
+fn (c &Channel1) dac_output_val() u8 {
+	return if c.dac_enabled && c.enabled {
+		u8(wave_duty[c.wave_duty_pattern][c.wave_duty_position]) * c.current_volume
+	} else {
+		0
+	}
+}
+
 fn (c &Channel1) read_nr1x(x u16) u8 {
 	return match x {
 		0 { (c.sweep_period << 4) | (u8(c.is_decrementing) << 3) | c.sweep_shift | 0x80 }

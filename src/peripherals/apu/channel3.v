@@ -41,6 +41,14 @@ fn (c &Channel3) dac_output() f32 {
 	}
 }
 
+fn (c &Channel3) dac_output_val() u8 {
+	return if c.dac_enabled && c.enabled {
+		(0xF & (c.wave_ram[c.wave_duty_position >> 1] >> ((c.wave_duty_position & 1) << 2))) >> c.volume_shift
+	} else {
+		0
+	}
+}
+
 fn (c &Channel3) read_nr3x(x u16) u8 {
 	return match x {
 		0 { (u8(c.dac_enabled) << 7) | 0x7F }

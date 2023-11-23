@@ -89,7 +89,7 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 		0xFF0F {
 			ins.read(addr)
 		}
-		0xFF10...0xFF26, 0xFF30...0xFF3F {
+		0xFF10...0xFF3F {
 			p.apu.read(addr)
 		}
 		0xFF40...0xFF45, 0xFF47...0xFF49, 0xFF4A, 0xFF4B {
@@ -107,6 +107,9 @@ pub fn (p &Peripherals) read(ins &Interrupts, addr u16) u8 {
 		}
 		0xFF70 {
 			p.wram.read(addr)
+		}
+		0xFF76...0xFF77 {
+			p.apu.read(addr)
 		}
 		0xFF80...0xFFFE {
 			p.hram.read(addr)
@@ -163,7 +166,7 @@ pub fn (mut p Peripherals) write(mut ins Interrupts, addr u16, val u8) {
 		0xFF0F {
 			ins.write(addr, val)
 		}
-		0xFF10...0xFF26, 0xFF30...0xFF3F {
+		0xFF10...0xFF3F {
 			p.apu.write(addr, val)
 		}
 		0xFF40...0xFF49, 0xFF4A...0xFF4C {

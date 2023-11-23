@@ -71,12 +71,20 @@ fn (c &Channel4) dac_output() f32 {
 	}
 }
 
+fn (c &Channel4) dac_output_val() u8 {
+	return if c.dac_enabled && c.enabled {
+		u8(c.lfsr & 1) * c.current_volume
+	} else {
+		0
+	}
+}
+
 fn (c &Channel4) read_nr4x(x u16) u8 {
 	return match x {
 		0 { 0xFF }
 		1 { 0xFF }
 		2 { (c.initial_volume << 4) | (u8(c.is_upwards) << 3) | c.period }
-		3 { u8(c.shift_amount) << 4 | u8(c.width_mode) << 3 | u8(c.divisor_code) }
+		3 { (u8(c.shift_amount) << 4) | (u8(c.width_mode) << 3) | u8(c.divisor_code) }
 		4 { (u8(c.length_enabled) << 6) | 0b1011_1111 }
 		else { 0xFF }
 	}

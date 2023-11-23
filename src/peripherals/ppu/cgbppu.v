@@ -446,7 +446,7 @@ fn (mut p CgbPpu) render_sprite(bg_prio [160]bool, can_overwrite [160]bool) {
 		palette := p.obp[if p.cgb_flag {
 			u8(sprite.flags) & 0b111
 		} else {
-			0
+			u8(sprite.flags.has(.old_palette))
 		}]
 		mut tile_idx := u16(sprite.tile_idx)
 		mut row := u8(if sprite.flags.has(.y_flip) {

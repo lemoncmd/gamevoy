@@ -100,8 +100,17 @@ pub fn (a &Apu) read(addr u16) u8 {
 		0xFF26 {
 			u8(a.channel1.enabled) | (u8(a.channel2.enabled) << 1) | (u8(a.channel3.enabled) << 2) | (u8(a.channel4.enabled) << 3) | 0x70 | (u8(a.enabled) << 7)
 		}
+		0xFF27...0xFF2F {
+			0xFF
+		}
 		0xFF30...0xFF3F {
 			a.channel3.wave_ram[addr - 0xFF30]
+		}
+		0xFF76 {
+			a.channel1.dac_output_val() | (a.channel2.dac_output_val() << 4)
+		}
+		0xFF77 {
+			a.channel3.dac_output_val() | (a.channel4.dac_output_val() << 4)
 		}
 		else {
 			panic('unexpected address for apu: 0x${addr:04X}')
@@ -152,6 +161,7 @@ pub fn (mut a Apu) write(addr u16, _val u8) {
 			}
 			a.enabled = enabled
 		}
+		0xFF27...0xFF2F {}
 		0xFF30...0xFF3F {
 			a.channel3.wave_ram[addr - 0xFF30] = val
 		}

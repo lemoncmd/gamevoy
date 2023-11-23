@@ -61,6 +61,14 @@ fn (c &Channel2) dac_output() f32 {
 	}
 }
 
+fn (c &Channel2) dac_output_val() u8 {
+	return if c.dac_enabled && c.enabled {
+		u8(wave_duty[c.wave_duty_pattern][c.wave_duty_position]) * c.current_volume
+	} else {
+		0
+	}
+}
+
 fn (c &Channel2) read_nr2x(x u16) u8 {
 	return match x {
 		1 { (c.wave_duty_pattern << 6) | 0b0011_1111 }
