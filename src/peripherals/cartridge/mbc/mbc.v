@@ -17,6 +17,7 @@ mut:
 	high_bank    u8
 	has_rtc      bool
 	will_latched bool
+	latched      bool
 	rom_banks    int
 	sram_enable  bool
 }
@@ -27,6 +28,7 @@ mut:
 	high_bank    u8
 	has_rtc      bool
 	will_latched bool
+	latched      bool
 	rom_banks    int
 	sram_enable  bool
 }
@@ -127,6 +129,7 @@ pub fn (mut m Mbc) write(addr u16, val u8) {
 				}
 				0x6000...0x7FFF {
 					if m.will_latched && val == 1 {
+						m.latched = !m.latched
 					}
 					m.will_latched = val == 0
 				}
@@ -161,6 +164,7 @@ pub fn (mut m Mbc) write(addr u16, val u8) {
 				}
 				0x6000...0x7FFF {
 					if m.will_latched && val == 1 {
+						m.latched = !m.latched
 					}
 					m.will_latched = val == 0
 				}
@@ -230,9 +234,9 @@ pub fn (m &Mbc) get_addr(addr u16) int {
 				}
 				0xA000...0xBFFF {
 					if Mbc(m).rtc_enable() {
-						int(m.high_bank)
+						int(m.high_bank - 8)
 					} else {
-						(int(m.high_bank) << 13) | (addr & 0x1FFF)
+						(int(m.high_bank) << 13) | int(addr & 0x1FFF)
 					}
 				}
 				else {
@@ -269,6 +273,13 @@ pub fn (m &Mbc) sram_enable() bool {
 pub fn (m &Mbc) rtc_enable() bool {
 	return match m {
 		Mbc3, Mbc30 { m.has_rtc && m.sram_enable && (0x8 <= m.high_bank && m.high_bank <= 0xC) }
+		else { false }
+	}
+}
+
+pub fn (m &Mbc) can_add_second() bool {
+	return match m {
+		Mbc3, Mbc30 { m.has_rtc && !m.latched }
 		else { false }
 	}
 }

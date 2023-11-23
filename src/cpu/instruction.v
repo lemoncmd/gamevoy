@@ -11,6 +11,7 @@ fn (mut c Cpu) nop(bus Peripherals) {
 
 fn (mut c Cpu) stop(bus Peripherals) {
 	if c.interrupts.read(0xFF4D) & 1 > 0 {
+		// TODO stop must stop so this change is too fast
 		c.interrupts.change_double_mode()
 	}
 	c.fetch(bus)

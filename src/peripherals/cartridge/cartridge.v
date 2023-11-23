@@ -7,6 +7,7 @@ pub struct Cartridge {
 	savable bool
 mut:
 	ram []u8
+	rtc [5]u8
 	mbc mbc.Mbc
 pub:
 	cgb_flag bool
@@ -40,7 +41,9 @@ pub fn (c &Cartridge) read(addr u16) u8 {
 			c.rom[c.mbc.get_addr(addr) & (c.rom.len - 1)]
 		}
 		0xA000...0xBFFF {
-			if c.mbc.sram_enable() {
+			if c.mbc.rtc_enable() {
+				c.rtc[c.mbc.get_addr(addr)]
+			} else if c.mbc.sram_enable() && c.ram.len != 0 {
 				c.ram[c.mbc.get_addr(addr) & (c.ram.len - 1)]
 			} else {
 				0xFF
@@ -58,7 +61,9 @@ pub fn (mut c Cartridge) write(addr u16, val u8) {
 			c.mbc.write(addr, val)
 		}
 		0xA000...0xBFFF {
-			if c.mbc.sram_enable() {
+			if c.mbc.rtc_enable() {
+				c.rtc[c.mbc.get_addr(addr)] = val
+			} else if c.mbc.sram_enable() && c.ram.len != 0 {
 				c.ram[c.mbc.get_addr(addr) & (c.ram.len - 1)] = val
 			}
 		}
