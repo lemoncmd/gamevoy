@@ -54,6 +54,7 @@ fn (mut g Gameboy) emulate_cycle() bool {
 			g.peripherals.ppu.oam_dma_emulate_cycle(g.peripherals.read(g.cpu.interrupts,
 				addr))
 		}
+		g.peripherals.serial.emulate_cycle(mut g.cpu.interrupts)
 	}
 	g.peripherals.apu.emulate_cycle()
 	if g.peripherals.ppu.emulate_cycle(mut g.cpu.interrupts) {
