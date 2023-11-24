@@ -40,7 +40,14 @@ pub fn (mut g Gameboy) run() ! {
 }
 
 fn (mut g Gameboy) emulate_cycle() bool {
-	clock_rate := if g.cpu.interrupts.read(0xFF4D) & 0x80 > 0 { 2 } else { 1 }
+	clock_rate := if g.cpu.interrupts.stop_count > 0 {
+		g.cpu.interrupts.stop_count--
+		0
+	} else if g.cpu.interrupts.read(0xFF4D) & 0x80 == 0 {
+		1
+	} else {
+		2
+	}
 	in_hdma_transfer := if g.peripherals.ppu.hdma != none {
 		g.peripherals.ppu.hdma_emulate_cycle(g.peripherals.read(g.cpu.interrupts, g.peripherals.ppu.dma_source))
 	} else {

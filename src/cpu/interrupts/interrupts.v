@@ -23,6 +23,7 @@ pub mut:
 	int_enable InterruptFlag
 	ime        bool
 	double     u8
+	stop_count u16
 }
 
 pub fn (mut i Interrupts) irq(f InterruptFlag) {
