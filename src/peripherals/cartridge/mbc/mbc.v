@@ -1,5 +1,7 @@
 module mbc
 
+import peripherals.cartridge.rtc { Rtc }
+
 struct NoMbc {}
 
 struct Mbc1 {
@@ -17,7 +19,6 @@ mut:
 	high_bank    u8
 	has_rtc      bool
 	will_latched bool
-	latched      bool
 	rom_banks    int
 	sram_enable  bool
 }
@@ -28,7 +29,6 @@ mut:
 	high_bank    u8
 	has_rtc      bool
 	will_latched bool
-	latched      bool
 	rom_banks    int
 	sram_enable  bool
 }
@@ -77,7 +77,7 @@ pub fn Mbc.new(cartridge_type u8, rom_banks int) Mbc {
 	}
 }
 
-pub fn (mut m Mbc) write(addr u16, val u8) {
+pub fn (mut m Mbc) write(addr u16, val u8, mut r Rtc) {
 	match mut m {
 		NoMbc {}
 		Mbc1 {
@@ -129,7 +129,7 @@ pub fn (mut m Mbc) write(addr u16, val u8) {
 				}
 				0x6000...0x7FFF {
 					if m.will_latched && val == 1 {
-						m.latched = !m.latched
+						r.latch()
 					}
 					m.will_latched = val == 0
 				}
@@ -164,7 +164,7 @@ pub fn (mut m Mbc) write(addr u16, val u8) {
 				}
 				0x6000...0x7FFF {
 					if m.will_latched && val == 1 {
-						m.latched = !m.latched
+						r.latch()
 					}
 					m.will_latched = val == 0
 				}
@@ -273,13 +273,6 @@ pub fn (m &Mbc) sram_enable() bool {
 pub fn (m &Mbc) rtc_enable() bool {
 	return match m {
 		Mbc3, Mbc30 { m.has_rtc && m.sram_enable && (0x8 <= m.high_bank && m.high_bank <= 0xC) }
-		else { false }
-	}
-}
-
-pub fn (m &Mbc) can_add_second() bool {
-	return match m {
-		Mbc3, Mbc30 { m.has_rtc && !m.latched }
 		else { false }
 	}
 }

@@ -1,6 +1,7 @@
 module gameboy
 
 import os
+import time
 import gg { Context }
 import cpu { Cpu }
 import peripherals { Peripherals }
@@ -56,6 +57,7 @@ fn (mut g Gameboy) emulate_cycle() bool {
 		}
 		g.peripherals.serial.emulate_cycle(mut g.cpu.interrupts)
 	}
+	g.peripherals.cartridge.rtc.emulate_cycle(time.now().unix_time_milli())
 	g.peripherals.apu.emulate_cycle()
 	if g.peripherals.ppu.emulate_cycle(mut g.cpu.interrupts) {
 		g.draw_lcd(g.peripherals.ppu.pixel_buffer())
