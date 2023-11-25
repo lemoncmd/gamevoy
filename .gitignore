@@ -27,3 +27,5 @@ bin/
 *.gb
 *.gbc
 *.sav
+*.pb12
+*.2bpp

@@ -16,7 +16,7 @@ pub mut:
 	rtc rtc.Rtc
 }
 
-pub fn Cartridge.new(rom []u8) Cartridge {
+pub fn Cartridge.new(rom []u8, is_cgb bool) Cartridge {
 	header := unsafe { *(&CartridgeHeader(&rom[0x100])) }
 	header.check_sum()
 
@@ -34,7 +34,7 @@ pub fn Cartridge.new(rom []u8) Cartridge {
 		ram: []u8{len: sram_size}
 		mbc: m
 		savable: header.is_savable()
-		cgb_flag: true // header.cgb_flag & 0x80 > 0
+		cgb_flag: is_cgb
 		rtc: Rtc.new()
 	}
 }
