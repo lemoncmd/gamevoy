@@ -1,10 +1,10 @@
 module apu
 
 const wave_duty = [
-	[f32(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]!,
-	[f32(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]!,
-	[f32(0.0), 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]!,
-	[f32(0.0), 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]!,
+	[u8(0), 0, 0, 0, 0, 0, 0, 1]!,
+	[u8(0), 0, 0, 0, 0, 0, 1, 1]!,
+	[u8(0), 0, 0, 0, 1, 1, 1, 1]!,
+	[u8(0), 0, 1, 1, 1, 1, 1, 1]!,
 ]!
 
 pub const samples = 512
@@ -53,16 +53,16 @@ pub fn (mut a Apu) emulate_cycle() {
 		}
 
 		if a.cycles % (apu.cpu_clock_hz / apu.sample_rate) == 0 {
-			left_sample := (f32((a.nr51 >> 7) & 0b1) * a.channel4.dac_output() +
-				f32((a.nr51 >> 6) & 0b1) * a.channel3.dac_output() +
-				f32((a.nr51 >> 5) & 0b1) * a.channel2.dac_output() +
-				f32((a.nr51 >> 4) & 0b1) * a.channel1.dac_output()) / 4.0
-			right_sample := (f32((a.nr51 >> 3) & 0b1) * a.channel4.dac_output() +
-				f32((a.nr51 >> 2) & 0b1) * a.channel3.dac_output() +
-				f32((a.nr51 >> 1) & 0b1) * a.channel2.dac_output() +
-				f32((a.nr51 >> 0) & 0b1) * a.channel1.dac_output()) / 4.0
-			a.samples[a.sample_idx * 2] = (f32((a.nr50 >> 4) & 0x7) / 7.0) * left_sample
-			a.samples[a.sample_idx * 2 + 1] = (f32(a.nr50 & 0x7) / 7.0) * right_sample
+			left_sample := (((a.nr51 >> 7) & 0b1) * a.channel4.dac_output() +
+				((a.nr51 >> 6) & 0b1) * a.channel3.dac_output() +
+				((a.nr51 >> 5) & 0b1) * a.channel2.dac_output() +
+				((a.nr51 >> 4) & 0b1) * a.channel1.dac_output())
+			right_sample := (((a.nr51 >> 3) & 0b1) * a.channel4.dac_output() +
+				((a.nr51 >> 2) & 0b1) * a.channel3.dac_output() +
+				((a.nr51 >> 1) & 0b1) * a.channel2.dac_output() +
+				((a.nr51 >> 0) & 0b1) * a.channel1.dac_output())
+			a.samples[a.sample_idx * 2] = f32(i32((a.nr50 >> 4) & 0x7) * i32(left_sample) - 210) / 210.0
+			a.samples[a.sample_idx * 2 + 1] = f32(i32(a.nr50 & 0x7) * i32(right_sample) - 210) / 210.0
 			a.sample_idx++
 		}
 
@@ -103,10 +103,10 @@ pub fn (a &Apu) read(addr u16) u8 {
 			a.channel3.wave_ram[addr - 0xFF30]
 		}
 		0xFF76 {
-			a.channel1.dac_output_val() | (a.channel2.dac_output_val() << 4)
+			a.channel1.dac_output() | (a.channel2.dac_output() << 4)
 		}
 		0xFF77 {
-			a.channel3.dac_output_val() | (a.channel4.dac_output_val() << 4)
+			a.channel3.dac_output() | (a.channel4.dac_output() << 4)
 		}
 		else {
 			panic('unexpected address for apu: 0x${addr:04X}')

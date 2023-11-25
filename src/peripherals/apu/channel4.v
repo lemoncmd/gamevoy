@@ -23,6 +23,7 @@ mut:
 	divisor_code u16
 }
 
+@[inline]
 fn (mut c Channel4) emulate_t_cycle() {
 	if c.frequency_timer == 0 {
 		c.frequency_timer = math.max(c.divisor_code << 4, 8) << c.shift_amount
@@ -62,16 +63,7 @@ fn (mut c Channel4) envelope() {
 	}
 }
 
-fn (c &Channel4) dac_output() f32 {
-	return if c.dac_enabled && c.enabled {
-		ret := f32(c.lfsr & 1) * f32(c.current_volume)
-		(ret / 7.5) - 1.0
-	} else {
-		0.0
-	}
-}
-
-fn (c &Channel4) dac_output_val() u8 {
+fn (c &Channel4) dac_output() u8 {
 	return if c.dac_enabled && c.enabled {
 		u8(c.lfsr & 1) * c.current_volume
 	} else {

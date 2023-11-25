@@ -17,6 +17,7 @@ mut:
 	wave_ram     [0x10]u8
 }
 
+@[inline]
 fn (mut c Channel3) emulate_t_cycle() {
 	if c.frequency_timer == 0 {
 		c.frequency_timer = (2048 - c.frequency) * 2
@@ -32,16 +33,7 @@ fn (mut c Channel3) length() {
 	}
 }
 
-fn (c &Channel3) dac_output() f32 {
-	return if c.dac_enabled && c.enabled {
-		ret := f32((0xF & (c.wave_ram[c.wave_duty_position >> 1] >> ((c.wave_duty_position & 1) << 2))) >> c.volume_shift)
-		(ret / 7.5) - 1.0
-	} else {
-		0.0
-	}
-}
-
-fn (c &Channel3) dac_output_val() u8 {
+fn (c &Channel3) dac_output() u8 {
 	return if c.dac_enabled && c.enabled {
 		(0xF & (c.wave_ram[c.wave_duty_position >> 1] >> ((c.wave_duty_position & 1) << 2))) >> c.volume_shift
 	} else {

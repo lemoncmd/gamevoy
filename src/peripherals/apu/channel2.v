@@ -19,6 +19,7 @@ mut:
 	period         u8
 }
 
+@[inline]
 fn (mut c Channel2) emulate_t_cycle() {
 	if c.frequency_timer == 0 {
 		c.frequency_timer = (2048 - c.frequency) * 4
@@ -52,18 +53,9 @@ fn (mut c Channel2) envelope() {
 	}
 }
 
-fn (c &Channel2) dac_output() f32 {
+fn (c &Channel2) dac_output() u8 {
 	return if c.dac_enabled && c.enabled {
-		ret := wave_duty[c.wave_duty_pattern][c.wave_duty_position] * f32(c.current_volume)
-		(ret / 7.5) - 1.0
-	} else {
-		0.0
-	}
-}
-
-fn (c &Channel2) dac_output_val() u8 {
-	return if c.dac_enabled && c.enabled {
-		u8(wave_duty[c.wave_duty_pattern][c.wave_duty_position]) * c.current_volume
+		wave_duty[c.wave_duty_pattern][c.wave_duty_position] * c.current_volume
 	} else {
 		0
 	}
