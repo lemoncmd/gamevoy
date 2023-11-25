@@ -56,7 +56,7 @@ pub:
 	dma_source u16
 pub mut:
 	oam_dma ?u16
-	hdma    ?u8
+	hdma    Hdma
 }
 
 pub fn DmgPpu.new() DmgPpu {

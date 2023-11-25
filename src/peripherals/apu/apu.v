@@ -1,7 +1,5 @@
 module apu
 
-import math.unsigned
-
 const wave_duty = [
 	[f32(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]!,
 	[f32(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]!,
@@ -20,7 +18,7 @@ mut:
 	enabled  bool
 	nr50     u8
 	nr51     u8
-	cycles   unsigned.Uint128
+	cycles   u32
 	fs       u8
 	channel1 Channel1
 	channel2 Channel2
@@ -32,31 +30,29 @@ pub mut:
 	samples_ready [1024]f32
 }
 
-const one = unsigned.uint128_from_64(1)
-
 pub fn Apu.new() Apu {
 	return Apu{}
 }
 
 pub fn (mut a Apu) emulate_cycle() {
 	for _ in 0 .. 4 {
-		a.cycles += apu.one
+		a.cycles++
 
 		a.channel1.emulate_t_cycle()
 		a.channel2.emulate_t_cycle()
 		a.channel3.emulate_t_cycle()
 		a.channel4.emulate_t_cycle()
 
-		if a.cycles.and_64(0x1FFF).is_zero() {
+		if a.cycles & 0x1FFF == 0 {
 			a.channel1.emulate_fs_cycle(a.fs)
 			a.channel2.emulate_fs_cycle(a.fs)
 			a.channel3.emulate_fs_cycle(a.fs)
 			a.channel4.emulate_fs_cycle(a.fs)
-			a.cycles = unsigned.uint128_zero
+			a.cycles = 0
 			a.fs = (a.fs + 1) & 7
 		}
 
-		if a.cycles.mod_64(apu.cpu_clock_hz / apu.sample_rate) == 0 {
+		if a.cycles % (apu.cpu_clock_hz / apu.sample_rate) == 0 {
 			left_sample := (f32((a.nr51 >> 7) & 0b1) * a.channel4.dac_output() +
 				f32((a.nr51 >> 6) & 0b1) * a.channel3.dac_output() +
 				f32((a.nr51 >> 5) & 0b1) * a.channel2.dac_output() +

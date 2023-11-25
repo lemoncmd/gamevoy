@@ -56,13 +56,25 @@ fn (mut s Stat) set_mode(m Mode) {
 	}
 }
 
+type HdmaRun = u8
+type HdmaStop = u8
+
+type Hdma = HdmaRun | HdmaStop
+
+pub fn (h Hdma) in_transfer() bool {
+	return match h {
+		HdmaRun { true }
+		HdmaStop { false }
+	}
+}
+
 pub interface Ppu {
 	dma_source u16
 	read(addr u16) u8
 	pixel_buffer() []u8
 mut:
 	oam_dma ?u16
-	hdma    ?u8
+	hdma    Hdma
 	write(addr u16, val u8)
 	oam_dma_emulate_cycle(val u8)
 	hdma_emulate_cycle(val u8) bool

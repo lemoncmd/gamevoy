@@ -89,7 +89,7 @@ mut:
 pub mut:
 	oam_dma    ?u16
 	dma_source u16
-	hdma       ?u8
+	hdma       Hdma
 	cgb_flag   bool = true
 }
 
@@ -156,10 +156,9 @@ pub fn (p &CgbPpu) read(addr u16) u8 {
 			u8(p.vram_bank) | 0b1111_1110
 		}
 		0xFF55 {
-			if hdma := p.hdma {
-				hdma & 0x7F
-			} else {
-				0xFF
+			match p.hdma {
+				HdmaRun { u8(p.hdma) & 0x7F }
+				HdmaStop { u8(p.hdma) }
 			}
 		}
 		0xFF68 {
@@ -261,15 +260,14 @@ pub fn (mut p CgbPpu) write(addr u16, val u8) {
 			p.dma_target |= u16(val) & 0xF0
 		}
 		0xFF55 {
-			if hdma := p.hdma {
-				if hdma & 0x80 > 0 && val & 0x80 == 0 {
-					// TODO halted hdma transfer must return length
-					p.hdma = none
+			if p.hdma is HdmaRun {
+				if u8(p.hdma as HdmaRun) & 0x80 > 0 && val & 0x80 == 0 {
+					p.hdma = HdmaStop(u8(p.hdma as HdmaRun) | 0x80)
 				} else {
-					p.hdma = val
+					p.hdma = HdmaRun(val)
 				}
 			} else {
-				p.hdma = val
+				p.hdma = HdmaRun(val)
 			}
 		}
 		0xFF68 {
@@ -524,7 +522,8 @@ pub fn (mut p CgbPpu) oam_dma_emulate_cycle(val u8) {
 }
 
 pub fn (mut p CgbPpu) hdma_emulate_cycle(val u8) bool {
-	mut hdma := p.hdma or { return false }
+	mut hdma := if p.hdma is HdmaRun { u8(p.hdma as HdmaRun) } else { return false
+	 }
 	if hdma & 0x80 > 0 {
 		hdma &= 0x7F
 		if p.stat.get_mode() == .hblank && p.cycles >= 36 {
@@ -532,7 +531,7 @@ pub fn (mut p CgbPpu) hdma_emulate_cycle(val u8) bool {
 			p.dma_target++
 			p.dma_source++
 			if p.dma_source & 0xF == 0 {
-				p.hdma = if hdma != 0 { 0x80 | (hdma - 1) } else { none }
+				p.hdma = if hdma != 0 { HdmaRun(0x80 | (hdma - 1)) } else { HdmaStop(0xFF) }
 			}
 			return true
 		}
@@ -542,7 +541,7 @@ pub fn (mut p CgbPpu) hdma_emulate_cycle(val u8) bool {
 		p.dma_target++
 		p.dma_source++
 		if p.dma_source & 0xF == 0 {
-			p.hdma = if hdma != 0 { hdma - 1 } else { none }
+			p.hdma = if hdma != 0 { HdmaRun(hdma - 1) } else { HdmaStop(0xFF) }
 		}
 		return true
 	}

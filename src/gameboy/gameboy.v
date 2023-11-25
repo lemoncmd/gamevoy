@@ -16,6 +16,8 @@ mut:
 	gg             ?&Context
 	image_idx      int
 	save_file_name string
+	timer_cycle    u8
+	last_utc       i64
 }
 
 pub fn Gameboy.new(br BootRom, cg Cartridge, save_file_name string) &Gameboy {
@@ -48,7 +50,13 @@ fn (mut g Gameboy) emulate_cycle() bool {
 	} else {
 		2
 	}
-	in_hdma_transfer := if g.peripherals.ppu.hdma != none {
+	if g.timer_cycle == 0 {
+		g.last_utc = time.now().unix_time_milli()
+		g.timer_cycle = 255
+	} else {
+		g.timer_cycle--
+	}
+	in_hdma_transfer := if g.peripherals.ppu.hdma.in_transfer() {
 		g.peripherals.ppu.hdma_emulate_cycle(g.peripherals.read(g.cpu.interrupts, g.peripherals.ppu.dma_source))
 	} else {
 		false
@@ -64,7 +72,7 @@ fn (mut g Gameboy) emulate_cycle() bool {
 		}
 		g.peripherals.serial.emulate_cycle(mut g.cpu.interrupts)
 	}
-	g.peripherals.cartridge.rtc.emulate_cycle(time.now().unix_time_milli())
+	g.peripherals.cartridge.rtc.emulate_cycle(g.last_utc)
 	g.peripherals.apu.emulate_cycle()
 	if g.peripherals.ppu.emulate_cycle(mut g.cpu.interrupts) {
 		g.draw_lcd(g.peripherals.ppu.pixel_buffer())
