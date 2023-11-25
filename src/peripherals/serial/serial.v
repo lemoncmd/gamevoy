@@ -4,10 +4,9 @@ import cpu.interrupts { Interrupts }
 
 pub struct Serial {
 mut:
-	data      u8
-	control   u8
-	send_data ?u8
-	recv_data ?u8
+	data    u8
+	control u8
+	cycles  u16
 }
 
 pub fn Serial.new() Serial {
@@ -30,7 +29,7 @@ pub fn (mut s Serial) write(addr u16, val u8) {
 		0xFF02 {
 			s.control = val
 			if s.is_master() && s.control & 0x80 > 0 {
-				s.send_data = s.data
+				s.cycles = u16(if s.is_fast() { 16 } else { 512 })
 			}
 		}
 		else {
@@ -40,12 +39,11 @@ pub fn (mut s Serial) write(addr u16, val u8) {
 }
 
 pub fn (mut s Serial) emulate_cycle(mut ints Interrupts) {
-	if _ := s.send_data {
-		s.recv_data = 0xFF
-		s.send_data = none
+	if s.cycles > 0 {
+		s.cycles--
 	}
-	if recv_data := s.recv_data {
-		s.data = recv_data
+	if s.control & 0x80 > 0 && s.cycles == 0 {
+		s.data = 0xFF
 		s.control &= 0x7F
 		ints.irq(.serial)
 	}
@@ -53,4 +51,8 @@ pub fn (mut s Serial) emulate_cycle(mut ints Interrupts) {
 
 fn (s &Serial) is_master() bool {
 	return s.control & 1 > 0
+}
+
+fn (s &Serial) is_fast() bool {
+	return s.control & 2 > 0
 }
