@@ -3,12 +3,6 @@ game boy color emulator in V
 
 ![pokemon gold](./docs/pokemon_gold.png)
 
-# usage
-```sh
-$ ./gamevoy BootROMFile GameROMFile
-```
-You can find free rom [here](https://github.com/LIJI32/SameBoy). Use `cgb_boot.bin`.
-
 # control
 - arrow keys: arrow keys
 - z: A
