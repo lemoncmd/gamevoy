@@ -24,9 +24,18 @@ pub fn (s &Serial) read(addr u16) u8 {
 
 pub fn (mut s Serial) write(addr u16, val u8) {
 	match addr {
-		0xFF01 { s.data = val }
-		0xFF02 { s.control = val }
-		else { panic('unexpected address for serial: 0x${addr:04X}') }
+		0xFF01 {
+			s.data = val
+		}
+		0xFF02 {
+			s.control = val
+			if s.is_master() && s.control & 0x80 > 0 {
+				s.send_data = s.data
+			}
+		}
+		else {
+			panic('unexpected address for serial: 0x${addr:04X}')
+		}
 	}
 }
 
