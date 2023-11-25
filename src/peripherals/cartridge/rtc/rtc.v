@@ -60,7 +60,7 @@ pub fn (r &Rtc) save() []u8 {
 		data[i * 4] = r.rtc[i]
 		data[i * 4 + 20] = r.latched_rtc[i]
 	}
-	binary.little_endian_put_u64_at(mut data, u64(r.last_utc), 40)
+	binary.little_endian_put_u64_at(mut data, u64(r.last_utc) / 1000, 40)
 	return data
 }
 
@@ -73,7 +73,7 @@ pub fn (mut r Rtc) load(_data []u8) {
 		r.rtc[i] = data[i * 4]
 		r.latched_rtc[i] = data[i * 4 + 20]
 	}
-	r.last_utc = i64(binary.little_endian_u64_at(data, 40))
+	r.last_utc = i64(binary.little_endian_u64_at(data, 40)) * 1000
 }
 
 fn (mut r Rtc) add_and_validate_time(add_sec i64) {
