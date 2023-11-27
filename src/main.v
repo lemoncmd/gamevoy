@@ -33,8 +33,7 @@ fn main() {
 	})
 
 	assert cartridge_file_name.ends_with('.gb') || cartridge_file_name.ends_with('.gbc'), 'file extention must be .gb or .gbc'
-	save_file_name := cartridge_file_name.reverse().replace('cbg.', 'vas.').replace('bg.',
-		'vas.').reverse()
+	save_file_name := cartridge_file_name.all_before_last('.') + '.sav'
 
 	cartridge_data := os.read_bytes(cartridge_file_name)!
 	c := cartridge.Cartridge.new(cartridge_data, is_cgb)
