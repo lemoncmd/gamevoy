@@ -18,7 +18,7 @@ fn (mut g Gameboy) init_gg() {
 		window_title: 'gamevoy'
 		init_fn: fn (mut g Gameboy) {
 			if mut gg_ctx := g.gg {
-				g.image_idx = gg_ctx.new_streaming_image(160, 144, 4, pixel_format: .rgba8)
+				g.image_idx = gg_ctx.new_streaming_image(160, 144, 4, pixel_format: .rgba8, min_filter: .nearest, mag_filter: .nearest)
 			}
 		}
 		frame_fn: fn (mut g Gameboy) {
