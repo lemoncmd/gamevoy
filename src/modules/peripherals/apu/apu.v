@@ -52,7 +52,7 @@ pub fn (mut a Apu) emulate_cycle() {
 			a.fs = (a.fs + 1) & 7
 		}
 
-		if a.cycles % (apu.cpu_clock_hz / apu.sample_rate) == 0 {
+		if a.cycles % (cpu_clock_hz / sample_rate) == 0 {
 			left_sample := (((a.nr51 >> 7) & 0b1) * a.channel4.dac_output() +
 				((a.nr51 >> 6) & 0b1) * a.channel3.dac_output() +
 				((a.nr51 >> 5) & 0b1) * a.channel2.dac_output() +
@@ -66,7 +66,7 @@ pub fn (mut a Apu) emulate_cycle() {
 			a.sample_idx++
 		}
 
-		if a.sample_idx >= apu.samples {
+		if a.sample_idx >= samples {
 			unsafe { vmemcpy(&a.samples_ready, &a.samples, sizeof(a.samples)) }
 			a.sample_idx = 0
 		}

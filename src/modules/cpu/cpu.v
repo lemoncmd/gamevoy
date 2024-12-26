@@ -19,7 +19,7 @@ mut:
 	regs Registers
 	ctx  Ctx
 pub mut:
-	interrupts interrupts.Interrupts
+	interrupts Interrupts
 }
 
 pub fn Cpu.new() Cpu {

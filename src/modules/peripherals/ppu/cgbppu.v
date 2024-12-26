@@ -424,10 +424,10 @@ fn (mut p CgbPpu) render_sprite(bg_prio [160]bool, can_overwrite [160]bool) {
 	size := if p.lcdc.has(.sprite_size) { 16 } else { 8 }
 
 	mut sprites := []CgbSprite{len: 40, init: CgbSprite{
-		y: p.oam[index * 4]
-		x: p.oam[index * 4 + 1]
+		y:        p.oam[index * 4]
+		x:        p.oam[index * 4 + 1]
 		tile_idx: p.oam[index * 4 + 2]
-		flags: unsafe { CgbFlag(p.oam[index * 4 + 3]) }
+		flags:    unsafe { CgbFlag(p.oam[index * 4 + 3]) }
 	}}.map(|it| CgbSprite{
 		...it
 		y: it.y - 16

@@ -46,7 +46,7 @@ pub fn Mbc.new(cartridge_type u8, rom_banks int) Mbc {
 		0x0F...0x13 {
 			Mbc3{
 				rom_banks: rom_banks
-				has_rtc: cartridge_type <= 0x10
+				has_rtc:   cartridge_type <= 0x10
 			}
 		}
 		0x19...0x1E {
@@ -149,7 +149,7 @@ pub fn (m &Mbc) get_addr(addr u16) int {
 			int(addr)
 		}
 		Mbc1 {
-			match addr {
+			res := match addr {
 				0x0000...0x3FFF {
 					if m.bank_mode {
 						(u32(m.high_bank) << 19) | u32(addr & 0x3FFF)
@@ -162,15 +162,17 @@ pub fn (m &Mbc) get_addr(addr u16) int {
 				}
 				0xA000...0xBFFF {
 					if m.bank_mode {
-						(int(m.high_bank) << 13) | (addr & 0x1FFF)
+						u32((int(m.high_bank) << 13) | (addr & 0x1FFF))
 					} else {
 						addr & 0x1FFF
 					}
 				}
 				else {
 					panic('unexpected address for cartridge: 0x${addr:04X}')
+					0
 				}
 			}
+			int(res)
 		}
 		Mbc3 {
 			match addr {
@@ -178,7 +180,7 @@ pub fn (m &Mbc) get_addr(addr u16) int {
 					int(addr & 0x3FFF)
 				}
 				0x4000...0x7FFF {
-					((u32(m.low_bank) & u32(m.rom_banks - 1)) << 14) | u32(addr & 0x3FFF)
+					int(((u32(m.low_bank) & u32(m.rom_banks - 1)) << 14) | u32(addr & 0x3FFF))
 				}
 				0xA000...0xBFFF {
 					if Mbc(m).rtc_enable() {
@@ -198,7 +200,7 @@ pub fn (m &Mbc) get_addr(addr u16) int {
 					int(addr & 0x3FFF)
 				}
 				0x4000...0x7FFF {
-					((u32(m.low_bank) & u32(m.rom_banks - 1)) << 14) | u32(addr & 0x3FFF)
+					int(((u32(m.low_bank) & u32(m.rom_banks - 1)) << 14) | u32(addr & 0x3FFF))
 				}
 				0xA000...0xBFFF {
 					(int(m.high_bank) << 13) | (addr & 0x1FFF)

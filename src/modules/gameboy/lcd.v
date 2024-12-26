@@ -12,22 +12,26 @@ const ratio = 4
 
 fn (mut g Gameboy) init_gg() {
 	g.gg = gg.new_context(
-		width: 160 * gameboy.ratio
-		height: 144 * gameboy.ratio
+		width:         160 * ratio
+		height:        144 * ratio
 		create_window: true
-		window_title: 'gamevoy'
-		init_fn: fn (mut g Gameboy) {
+		window_title:  'gamevoy'
+		init_fn:       fn (mut g Gameboy) {
 			if mut gg_ctx := g.gg {
-				g.image_idx = gg_ctx.new_streaming_image(160, 144, 4, pixel_format: .rgba8, min_filter: .nearest, mag_filter: .nearest)
+				g.image_idx = gg_ctx.new_streaming_image(160, 144, 4,
+					pixel_format: .rgba8
+					min_filter:   .nearest
+					mag_filter:   .nearest
+				)
 			}
 		}
-		frame_fn: fn (mut g Gameboy) {
+		frame_fn:      fn (mut g Gameboy) {
 			if mut gg_ctx := g.gg {
 				gg_ctx.begin()
 			}
 			mut not_rendered := true
 			fps := math.max(int(0.5 + 1.0 / sapp.frame_duration()), 60)
-			for _ in 0 .. (gameboy.cpu_clock_hz / gameboy.m_cycle_clock) / fps {
+			for _ in 0 .. (cpu_clock_hz / m_cycle_clock) / fps {
 				if g.emulate_cycle() {
 					not_rendered = false
 				}
@@ -43,13 +47,13 @@ fn (mut g Gameboy) init_gg() {
 				gg_ctx.end()
 			}
 		}
-		quit_fn: fn (_ &gg.Event, g &Gameboy) {
+		quit_fn:       fn (_ &gg.Event, g &Gameboy) {
 			g.save()
 			g.quit_audio()
 		}
-		keydown_fn: on_key_down
-		keyup_fn: on_key_up
-		user_data: &g
+		keydown_fn:    on_key_down
+		keyup_fn:      on_key_up
+		user_data:     &g
 	)
 }
 

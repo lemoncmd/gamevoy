@@ -9,11 +9,11 @@ pub struct Cartridge {
 	savable bool
 mut:
 	ram []u8
-	mbc mbc.Mbc
+	mbc Mbc
 pub:
 	cgb_flag bool
 pub mut:
-	rtc rtc.Rtc
+	rtc Rtc
 }
 
 pub fn Cartridge.new(rom []u8, is_cgb bool) Cartridge {
@@ -30,12 +30,12 @@ pub fn Cartridge.new(rom []u8, is_cgb bool) Cartridge {
 	assert rom.len == rom_size, 'expected ${rom_size} bytes of cartridge ROM, got ${rom.len}'
 
 	return Cartridge{
-		rom: rom
-		ram: []u8{len: sram_size}
-		mbc: m
-		savable: header.is_savable()
+		rom:      rom
+		ram:      []u8{len: sram_size}
+		mbc:      m
+		savable:  header.is_savable()
 		cgb_flag: is_cgb
-		rtc: Rtc.new()
+		rtc:      Rtc.new()
 	}
 }
 

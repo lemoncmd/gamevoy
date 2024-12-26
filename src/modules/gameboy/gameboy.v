@@ -24,8 +24,8 @@ pub fn Gameboy.new(br BootRom, cg Cartridge, save_file_name string) &Gameboy {
 	c := Cpu.new()
 	p := Peripherals.new(br, cg)
 	mut ret := &Gameboy{
-		cpu: c
-		peripherals: p
+		cpu:            c
+		peripherals:    p
 		save_file_name: save_file_name
 	}
 	ret.cpu.init(ret.peripherals)
@@ -51,7 +51,7 @@ fn (mut g Gameboy) emulate_cycle() bool {
 		2
 	}
 	if g.timer_cycle == 0 {
-		g.last_utc = time.now().unix_time_milli()
+		g.last_utc = time.now().unix_milli()
 		g.timer_cycle = 255
 	} else {
 		g.timer_cycle--

@@ -13,33 +13,33 @@ import cpu.interrupts { Interrupts }
 
 pub struct Peripherals {
 mut:
-	bootrom bootrom.BootRom
-	wram    wram.WRam
-	hram    hram.HRam
+	bootrom BootRom
+	wram    WRam
+	hram    HRam
 pub mut:
-	cartridge cartridge.Cartridge
-	ppu       ppu.Ppu
-	apu       apu.Apu
-	timer     timer.Timer
-	joypad    joypad.Joypad
-	serial    serial.Serial
+	cartridge Cartridge
+	ppu       Ppu
+	apu       Apu
+	timer     Timer
+	joypad    Joypad
+	serial    Serial
 }
 
 pub fn Peripherals.new(br BootRom, cg Cartridge) Peripherals {
 	return Peripherals{
-		bootrom: br
+		bootrom:   br
 		cartridge: cg
-		wram: WRam.new()
-		hram: HRam.new()
-		ppu: if cg.cgb_flag {
-			ppu.Ppu(CgbPpu.new())
+		wram:      WRam.new()
+		hram:      HRam.new()
+		ppu:       if cg.cgb_flag {
+			Ppu(CgbPpu.new())
 		} else {
-			ppu.Ppu(DmgPpu.new())
+			Ppu(DmgPpu.new())
 		}
-		apu: Apu.new()
-		timer: Timer.new()
-		joypad: Joypad.new()
-		serial: Serial.new()
+		apu:       Apu.new()
+		timer:     Timer.new()
+		joypad:    Joypad.new()
+		serial:    Serial.new()
 	}
 }
 

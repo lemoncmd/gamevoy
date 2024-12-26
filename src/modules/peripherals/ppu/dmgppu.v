@@ -264,10 +264,10 @@ fn (mut p DmgPpu) render_sprite(bg_prio [160]bool) {
 	size := if p.lcdc.has(.sprite_size) { 16 } else { 8 }
 
 	mut sprites := []Sprite{len: 40, init: Sprite{
-		y: p.oam[index * 4]
-		x: p.oam[index * 4 + 1]
+		y:        p.oam[index * 4]
+		x:        p.oam[index * 4 + 1]
 		tile_idx: p.oam[index * 4 + 2]
-		flags: unsafe { SpriteFlag(p.oam[index * 4 + 3]) }
+		flags:    unsafe { SpriteFlag(p.oam[index * 4 + 3]) }
 	}}.map(|it| Sprite{
 		...it
 		y: it.y - 16
