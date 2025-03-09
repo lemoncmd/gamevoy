@@ -687,8 +687,8 @@ ReadCGBLogoHalfTile:
 ; LoadTileset using PB12 codec, 2020 Jakub Kądziołka
 ; (based on PB8 codec, 2019 Damian Yerrick)
 
-CGBLogo_dst = $8080
-CGBLogo_length = (128 * 24) / 64
+DEF CGBLogo_dst = $8080
+DEF CGBLogo_length = (128 * 24) / 64
 
 LoadTileset:
     ld hl, CGBLogo
@@ -1089,11 +1089,11 @@ LoadBGPalettes:
 LoadPalettes:
     ld a, $80
     or e
-    ld [c], a
+    ldh [c], a
     inc c
 .loop
     ld a, [hli]
-    ld [c], a
+    ldh [c], a
     dec d
     jr nz, .loop
     ret
