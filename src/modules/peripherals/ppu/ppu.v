@@ -59,7 +59,7 @@ fn (mut s Stat) set_mode(m Mode) {
 type HdmaRun = u8
 type HdmaStop = u8
 
-type Hdma = HdmaRun | HdmaStop
+type Hdma = HdmaStop | HdmaRun
 
 pub fn (h Hdma) in_transfer() bool {
 	return match h {
