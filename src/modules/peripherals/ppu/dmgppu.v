@@ -235,7 +235,7 @@ fn (mut p DmgPpu) render_window(mut bg_prio [160]bool) {
 	mut wly_add := u8(0)
 	y := p.wly
 	for i in 0 .. lcd_width {
-		x, overflow := util.sub_8(i, p.wx - 7, 0)
+		x, overflow := util.sub_8(i + 7, p.wx, 0)
 		if overflow > 0 {
 			continue
 		}
